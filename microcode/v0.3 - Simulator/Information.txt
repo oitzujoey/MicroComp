@@ -1,0 +1,4 @@
+The purpose of this change is to load the instruction register on versions that it is edge triggered. As of writing, the only version that uses this type of register is the VHDL version.
+
+Changes:
+Most operations in the microcode have been delayed by two clock cycles. The only operation that remains in the first cycle is to load the instruction register.

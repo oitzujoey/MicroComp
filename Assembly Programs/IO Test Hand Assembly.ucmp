@@ -1,0 +1,9 @@
+
+.prog
+.addr 0
+
+	LDI 55 A		//08 55
+	LDI 00 B		//10 00
+	LDI 80 C		//18 80
+	STM A			//50
+	

@@ -1,0 +1,113 @@
+/*
+NOP
+LDI # A/B/C
+LDM A/B/C
+LDP A/B/C
+STM A
+STP A
+MOV A B/B A/A C/B C
+BR.
+SWF A
+SHR A/B
+ADD A/B/C
+SUB A/B/C
+AND A/B
+OR A/B
+XOR A/B
+*/
+
+//Test 1: Use all of the instructions.
+
+.prog
+.addr 0
+
+	//Passes.
+	NOP				//0000	Test NOP.
+	
+	//Passes.
+	LDI #DE A		//0001	Test LDI # A, B and C. A: DE
+	LDI #AD B		//0003	A: DE; B: AD
+	LDI #BE C		//0005	A: DE; B: AD; C: BE
+	
+	//Passes.
+	SWF A			//0007	Test SWF. B: AD; C: BE; F: DE
+	LDI #EF A		//0008	A: EF; B: AD; C: BE; F: DE
+	SWF A			//000A	A: DE; B: AD; C: BE; F: EF
+	
+	//Passes.
+	MOV B C			//000B	Test the MOVs. A: DE; B: AD; C: AD; F: EF
+	MOV A B			//000C	A: DE; B: DE; C: AD; F: EF
+	SWF A			//000D	A: EF; B: DE; C: AD; F: DE
+	MOV B A			//000E	A: DE; B: DE; C: AD; F: DE
+	MOV A C			//000F	A: DE; B: DE; C: DE; F: DE
+	
+	//Completed.
+	LDI 0 A			//0010	Set up carry for addition test. A: 00; B: DE; C: DE; F: DE
+	SWF A			//0012	A: DE; B: DE; C: DE; F: 00
+	
+	//Passes.
+	ADD A			//0013	Test the ADDs. A: BC; B: DE; C: DE; F: C-N-_-!Z-H-_-_-T
+	ADD B			//0014	A: BC; B: 9B; C: DE; F: C-N-_-!Z-H-_-_-T
+	ADD C			//0015	A: BC; B: 9B; C: 58; F: C-_-V-!Z-H-_-_-T
+	
+	//Passes.
+	SHR A			//Test SHRs. A: 5E; B: 9B; C: DE; F: ?-N-_-?-?-E-_-T
+	SHR B			//A: 5E; B: 2F; C: DE; F: ?-N-?-?-?-E-_-T
+	
+	//Completed.
+	SWF				//Set up carry for subtract since I am not sure what the state of the carry bit is. A: ?; B: 2F; C: DE; F: 5E
+	LDI #01 A		//A: 01; B: 2F; C: DE; F: 5E
+	SWF				//A: 5E; B: 2F; C: DE; F: C-_-_-_-_-_-_-_
+	
+	//Passed.
+	SUB A			//Test SUBs. A: 2F; B: 2F; C: DE; F: C-_-_-!Z-_-_-_-T
+	SUB B			//A: 2F; B: 00; C: DE; F: C-_-_-!Z-H-E-S-T
+	
+	//Completed.
+	LDI #11 A		//Clean up the mess left by SUB.
+	LDI #3C B
+	
+	//Passed.
+	XOR A			//Test XORs. A: 2D; B: 3C; C: DE; F: ?-?-?-!Z-?-E-S-T
+	XOR B			//A: 2D; B: 11; C: DE; F: ?-?-?-!Z-?-E-S-T
+	
+	//Passed.
+	AND A			//Test ANDs. A: 01; B: 11; C: DE; F: ?-?-?-!Z-?-_-S-T
+	LDI #80 A		//Test Zero flag. A: 80; B: 11; C: DE; F: ?
+	AND B			//A: 80; B: 00; C: DE; F: ?-?-?-!Z-H?-E-_-T
+	
+	//Passed.
+	OR A			//Test ORs. A: 80; B: 00; C: DE; F: ?-?-?-!Z-?-_-_-T
+	OR B			//A: 80; B: 80; C: DE; F: ?-?-?-!Z-?-_-_-T
+	
+	//Passed.
+	LDI 3 B			//Test STM. A: 80; B: 03; C: DE; F: ?
+	LDI 0 C			//A: 80; B: 03; C: 00; F: ?
+	STM A			//A: 80; B: 03; C: 00; F: ?; 0x0003: 80
+	
+	//Passed.
+	LDP A			//Test the LDPs. A: 10; B: 03; C: 00; F: F9?
+	LDP B			//A: 10; B: 10; C: 00; F: ?
+	LDP C			//A: 10; B: 10; C: 08; F: ?
+	
+	//Completed.
+	LDI 3 B			//Set up address for LDMs. A: 10; B: 03; C: 10; F: F9?
+	LDI 0 C			//A: 10; B: 03; C: 00; F: ?
+	
+	//Passed.
+	LDM A			//Test the LDMs. A: 80; B: 03; C: 00; F: F9?
+	LDM B			//A: 80; B: 80; C: 00; F: ?
+	LDI 3 B			//A: 80; B: 03; C: 00; F: ?
+	LDM C			//A: 80; B: 03; C: 80; F: ?
+	
+	//Seems to pass.
+	STP A			//Half test STP. A: 80; B: 03; C: 80; F: ?
+	
+	//BR.F has bazaar behavior in the simulator, but the BR.T passed.
+	BR.F			//Test BR.cc. A: 80; B: 03; C: 80; F: ?
+	LDI 0 B			//A: 80; B: 00; C: 80; F: ?
+	LDI 0 C			//A: 80; B: 00; C: 00; F: ?
+	BR.T			//A: 80; B: 00; C: 00; F: ?
+
+.data
+.addr 0

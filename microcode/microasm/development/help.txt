@@ -1,0 +1,9 @@
+Options:
+    -f file     Microassembly file
+    -o file     Output file
+    -m format   Output format
+                    Default format is raw binary.
+                    BIN     binary (default)
+                    HEX     hex
+                    IHEX    Intel HEX
+    -h          Help

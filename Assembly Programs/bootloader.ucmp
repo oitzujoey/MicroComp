@@ -1,0 +1,31 @@
+/*  MicroComp Bootloader
+*/
+
+.prog
+
+.addr 0x0000
+START:
+    LDI 0 F             ; Initialize pointer B.
+LOOP:
+    MOV F B
+    LDI 0x80 C          ; Write address B to output.
+    MOV B A
+    STM A
+    LDM A               ; Take instruction from input...
+    LDI 0x00 C          ; and store in prog[B].
+    STM A
+    LDI 1 A             ; Increment pointer.
+    LDI 0 F
+    ADD B
+    LDI 00 A     ; Execute program if the last byte has been written.
+    LDI 1 F
+    SUB B A A
+    LDI HIGH(BOOT) C
+    BR.Z
+    MOV B F
+    LDI LOW(LOOP) B
+    LDI HIGH(LOOP) C
+    JMP
+    
+.addr 0x0100
+BOOT:

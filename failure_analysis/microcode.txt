@@ -1,0 +1,43 @@
+Simplex-III
+    Logic/ROM
+    Not registered?
+Magic-1
+    Logic
+    Not registered
+Mark 1 FORTH
+    ROM
+    Registered
+Dieter recommends registered outputs and using the AS macro assembler to generate microcode.
+M02
+    ROM
+    Partially registered
+CPUville 8-bit CPU
+    GAL for next state calculation/logic
+    Registered
+Galactic Electronics 4-bit CPUville
+    ROM
+    Partially registered
+    Noticed glitches
+HJS22
+    ROM
+BMOW
+    ROM
+LEO-1
+    Logic
+    Not registered
+MP-4
+    ROM
+    Not registered
+Dreamcatcher
+    ROM
+    Registered
+Gigatron
+    Logic
+    Not registered
+mdComputer8
+    ROM
+    Not registered
+MarkFabianV2
+    ROM
+    Not registered
+    Register enable

@@ -1,0 +1,6 @@
+"Broadside" chips such as 74574 and 74245 are a lot nicer to wire than chips such as 74244.
+Buses are very messy and difficult to wire on solderless breadboards.
+When determining which features to include in a CPU, consider how many extra chips each feature uses. I did not do this, so I only realized much later that allowing the C register to be read would only require one or two extra chips and add much more programming flexibility.
+Use a PCB.
+Simulate the machine before building it.
+Load the microcode output into a register to prevent spikes and latency issues.

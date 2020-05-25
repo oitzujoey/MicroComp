@@ -1,0 +1,169 @@
+LDI byte F
+LDI byte A
+LDI byte B
+LDI byte C
+MOV F A
+MOV F B
+MOV F C
+MOV A F
+MOV A B
+MOV A C
+MOV B F
+MOV B A
+MOV B C
+MOV C F
+MOV C A
+MOV C B
+LDM F
+LDM A
+LDM B
+;LDM C
+LDP F
+LDP A
+LDP B
+;LDP C
+STM F
+STM A
+STP F
+STP A
+BR.cc
+BR.ncc
+ALU A B F
+ALU A B A
+;ALU A B B
+;ALU A B C
+SHR A A
+;SHR A B
+NOP
+;SWP A B
+
+NOP
+ADD a b c
+    prog[pc] -> ir; pc++
+    prog[pc] -> B; pc++
+    mem[CB] -> A
+    prog[pc] -> B; pc++
+    mem[CB] -> B
+    ALUF -> A
+    prog[pc] -> B; pc++
+    A -> mem[CB]
+    
+a + b -> c
+b -> a
+c -> b
+
+a + b -> a
+a <-> b
+
+
+// Microcode v1.1.1: Very easy to use.
+
+.prog
+    
+    ldi 0 a
+        prog[PC] -> IR
+        prog[PC] -> A
+        prog[PC] -> B
+        prog[PC] -> C
+        A -> mem[C B]
+    ldi 1 b
+        prog[PC] -> IR
+        prog[PC] -> A
+        prog[PC] -> B
+        prog[PC] -> C
+        A -> mem[C B]
+    stpg 0x00
+        prog[PC] -> IR
+        prog[PC] -> C
+    
+LOOP:
+    movsl a IO
+        prog[PC] -> IR
+        prog[PC] -> B
+        mem[C B] -> A
+        C -> F
+        prog[PC] -> B
+        prog[PC] -> C
+        A -> mem[C B]
+        F -> C
+    add a b c
+        prog[PC] -> IR
+        prog[PC] -> B
+        mem[C B] -> A
+        prog[PC] -> B
+        mem[C B] -> B
+        prog[PC] -> F   //Set F to zero. Will have to be encoded in the instruction.
+        ALUF -> A
+        prog[PC] -> B
+        A -> mem[C B]
+    mov b a
+        prog[PC] -> IR
+        prog[PC] -> B
+        mem[C B] -> A
+        prog[PC] -> B
+        A -> mem[C B]
+    mov c b
+        prog[PC] -> IR
+        prog[PC] -> B
+        mem[C B] -> A
+        prog[PC] -> B
+        A -> mem[C B]
+    jmp LOOP
+        prog[PC] -> IR
+        C -> F
+        prog[PC] -> B
+        prog[PC] -> C
+        C B -> PC
+    
+.data
+.addr 0x8000
+
+IO:
+
+// Microcode v1.1.0: This version actually looks shorter and faster.
+
+.prog
+
+    LDI 1 F
+        prog[PC] -> IR
+        prog[PC] -> F
+    LDI 0 A
+        prog[PC] -> IR
+        prog[PC] -> A
+
+LOOP:
+    LDI HIGH(IO) C
+        prog[PC] -> IR
+        prog[PC] -> C
+    STM A
+        prog[PC] -> IR
+        A -> mem[C B]
+    MOV F B
+        prog[PC] -> IR
+        F -> B
+    LDI 0 F
+        prog[PC] -> IR
+        prog[PC] -> F
+    ADD A
+        prog[PC] -> IR
+        ALUF -> A
+    MOV A F
+        prog[PC] -> IR
+        A -> F
+    MOV B A
+        prog[PC] -> IR
+        B -> A
+    LDI HIGH(LOOP) C
+        prog[PC] -> IR
+        prog[PC] -> C
+    LDI LOW(LOOP) B
+        prog[PC] -> IR
+        prog[PC] -> B
+    JMP
+        prog[PC] -> IR
+        C B -> PC
+    
+.data
+.addr 0x8000
+
+IO:

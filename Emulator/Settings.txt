@@ -1,0 +1,12 @@
+Version{1.0}
+Microcode_Location{
+	"",
+	"",
+	""
+}
+Microcode_Format{"Hex"}
+Run_On_Startup{False}
+Program_Location{""}
+Program_Format{"Intel_HEX"}
+Memory_Size{256}
+Breakpoints{}

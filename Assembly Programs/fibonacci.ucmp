@@ -1,0 +1,27 @@
+
+.prog
+
+    ; Passed
+    LDI 1 F
+    ; Passed
+    LDI 0 A
+
+LOOP:
+    ; Passed
+    LDI HIGH(IO) C
+    ; 
+    STM A
+    MOV F B
+    LDI 0 F
+    ADD A
+    MOV A F
+    MOV B A
+    LDI HIGH(LOOP) C
+    LDI LOW(LOOP) B
+    ; Passed
+    JMP
+    
+.data
+.addr 0x8000
+
+IO:

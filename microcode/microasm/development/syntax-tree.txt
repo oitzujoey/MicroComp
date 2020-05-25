@@ -1,0 +1,63 @@
+struct tree {
+    struct roms {
+        int romnum = 3
+        int depth = 16
+        int width = 8
+        struct rom[romnum] = {
+            struct rom {
+                char *bits[width] = {"wrp", ..., "aclk"}
+                bool inv[width] = {1, ..., 0}
+            },
+            ...,
+            struct rom {
+                char *bits[width] = {"dtoe", ..., "upcrst"}
+                bool inv[width] = {1, ..., 1}
+            }
+        }
+    }
+    struct asm {
+        int opnum = 32
+        int ucodeWidth = 24;
+        int fillLength = 1;
+        char *fill[ucodeWidth] = {"upcrst"}
+        int fillVals[ucodeWidth][2] = {{3, 7}}
+        int opLength[opnum] {4, ..., 2}
+        int sigLength[opnum][depth] = {
+            {
+                2,
+                ...,
+                5
+            },
+            ...,
+            {
+                2,
+                ...,
+                4
+            }
+        }
+        char *signals[opnum][depth][ucodeWidth] = {
+            {
+                {"rdp", "pcoe"},
+                ...,
+                {"rdp", ..., "upcrst"}
+            },
+            ...,
+            {
+                {"rdp", "pcoe"},
+                {"rdp", ..., "upcrst"}
+            }
+        }
+        bool values[opnum][depth][ucodeWidth][2] = {
+            {
+                {{1, 1}, {2, 7}},
+                ...,
+                {{1, 1}, ..., {3, 7}}
+            },
+            ...,
+            {
+                {{1, 1}, {2, 7}},
+                {{1, 1}, ..., {3, 7}}
+            }
+        }
+    }
+}

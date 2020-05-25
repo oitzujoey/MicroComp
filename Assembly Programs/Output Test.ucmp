@@ -1,0 +1,9 @@
+
+.cpu microcomp
+
+.prog
+	LDI #A5 A	;08 A5
+	LDI #8B B	;10 8B
+	LDI #C4 C	;18 C4
+	STM A		;50
+	

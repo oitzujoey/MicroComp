@@ -1,0 +1,34 @@
+
+.prog
+
+    LDI 1 F
+0000    00 01
+    LDI 0 A
+0002    04 00
+
+LOOP:
+    LDI HIGH(IO) C
+0004    0C 80
+    STM A
+0006    64
+    MOV F B
+0007    14
+    LDI 0 F
+0008    00 00
+    ADD A
+000A    8B
+    MOV A F
+000B    1C
+    MOV B A
+000C    2C
+    LDI HIGH(LOOP) C
+000D    0C 00
+    LDI LOW(LOOP) B
+000F    08 04
+    JMP
+0011    77
+    
+.data
+.addr 0x8000
+
+IO:

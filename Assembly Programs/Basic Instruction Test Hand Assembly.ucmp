@@ -1,0 +1,98 @@
+/*
+NOP
+LDI # A/B/C
+LDM A/B/C
+LDP A/B/C
+STM A
+STP A
+MOV A B/B A/A C/B C
+BR.
+SWF A
+SHR A/B
+ADD A/B/C
+SUB A/B/C
+AND A/B
+OR A/B
+XOR A/B
+*/
+
+//Test 1: Use all of the instructions.
+
+//Assembly			Machine
+
+.prog
+.addr 0
+
+					;			Reset state:	IR 0xFF
+
+	NOP				;00			IR 0x00
+	
+	LDI #DE A		;08 DE		IR 0x08		A 0b01111011=0x7B	Note: A register has reversed input. This may end up fine.
+	LDI #AD B		;10 AD					B 0b10110101=0xB5	Note: B register has reversed input. This may end up fine.
+	LDI #BE C		;18 BE					C 0b01111101=0x7D	Note: C register has reversed input. This may end up fine.
+	
+	SWF A			;90						Doesn't work. A gets loaded, but not F. This means that 
+	LDI #EF A		;08 EF
+	SWF A			;90
+	
+	MOV B C			;78
+	MOV A B			;60
+	SWF A			;90
+	MOV B A			;68
+	MOV A C			;70
+	
+	LDI 0 A			;08 00
+	SWF A			;90
+	
+	ADD A			;A8
+	ADD B			;B0
+	ADD C			;B8
+	
+	SHR A			;98
+	SHR B			;A0
+	
+	SWF				;90
+	LDI #01 A		;08 80
+	SWF				;90
+	
+	SUB A			;C0
+	SUB B			;C8
+	
+	LDI #11 A		;08 11
+	LDI #3C B		;10 3C
+	
+	XOR A			;F0
+	XOR B			;F8
+	
+	AND A			;D0
+	LDI #80 A		;08 80
+	AND B			;D8
+	
+	OR A			;E0
+	OR B			;E8
+	
+	LDI 3 B			;10 03
+	LDI 0 C			;18 00
+	STM A			;50
+	
+	LDP A			;38
+	LDP B			;40
+	LDP C			;48
+	
+	LDI 3 B			;10 03
+	LDI 0 C			;18 00
+	
+	LDM A			;20
+	LDM B			;28
+	LDI 3 B			;10 03
+	LDM C			;30
+	
+	STP A			;58
+	
+	BR.F			;8F
+	LDI 0 B			;10 00
+	LDI 0 C			;18 00
+	BR.T			;87
+
+.data
+.addr 0

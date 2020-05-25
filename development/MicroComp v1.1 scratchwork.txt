@@ -1,0 +1,166 @@
+
+LDI byte F
+LDI byte A
+LDI byte B
+LDI byte C
+MOV F A
+MOV F B
+MOV F C
+MOV A F
+MOV A B
+MOV A C
+MOV B F
+MOV B A
+MOV B C
+MOV C F
+MOV C A
+MOV C B
+LDM F
+LDM A
+LDM B
+LDP F
+LDP A
+LDP B
+STM F
+STM A
+STP F
+STP A
+BR.cc
+BR.ncc
+ALU A
+ALU B
+SHR A
+NOP
+
+
+.macro addm 16'a 16'b 16'c
+    LDI LOW(a) B
+    LDI HIGH(a) C
+    LDM A
+    LDI LOW(b) B
+    LDI HIGH(a) C
+    LDM B
+    LDI 0 F
+    ADD A
+    LDI LOW(c) B
+    LDI HIGH(c) C
+    STM A
+    
+; I kind of like this fast paging.
+.macro add 8'a 8'b 8'c
+    LDI a B
+    LDM A
+    LDI b B
+    LDM B
+    LDI 0 F
+    ADD A
+    LDI c B
+    STM A
+    
+.macro ldi 8'# 8'a
+    LDI # A
+    LDI a B
+    STM A
+    
+.macro chpage 8'#
+    LDI # C
+    
+.macro nop
+    NOP
+    
+.macro ljmp 16'#
+    LDI HIGH(#) C
+    LDI LOW(#) B
+    JMP
+    
+.macro not 8'a
+    LDI 0 F
+    LDI a B
+    LDM A
+    LDI #FF B
+    XOR A
+    LDI a B
+    STM A
+    
+.macro neg 8'a
+    LDI 0 F
+    LDI a B
+    LDM B
+    LDI 0 A
+    SUB A
+    LDI a B
+    STM
+    
+.macro add 8'a 8'#
+    LDI a B
+    LDM A
+    LDI # B
+    LDI 0 F
+    ADD A
+    LDI a B
+    STM A
+    
+.macro test 8'a 8'f
+    LDI a B
+    LDM A
+    LDI 0 B
+    LDI 0 F or MOV B F
+    SUB A or SUB B
+    LDI f B
+    STM F
+    
+.macro comp 8'a 8'b 8'f
+    LDI a B
+    LDM A
+    LDI b B
+    LDM B
+    LDI 0 F
+    SUB A
+    LDI f B
+    STM F
+    
+.macro lda 16'a 16'b
+    LDI HIGH(a+1) C ; Load &HIGH(pointer).
+    LDI LOW(a+1) B
+    LDM A           ; Load HIGH(pointer).
+    LDI HIGH(a) C   ; Load &LOW(pointer).
+    LDI LOW(a) B
+    LDM B           ; Load LOW(pointer).
+    MOV A C         ; Move HIGH(pointer) to C to make CB == pointer.
+    LDM A           ; Load *pointer.
+    LDI HIGH(b) C   ; Load &b
+    LDI LOW(b) B
+    STM A           ; Store *pointer to b.
+    
+.macro sta 16'a 16'b
+    LDI HIGH(a) C   ; Load &a.
+    LDI LOW(a) B
+    LDM A           ; Move a to A.
+    LDI HIGH(a+1) C ; Load &HIGH(pointer).
+    LDI LOW(a+1)
+    LDM F           ; Save HIGH(pointer) in F.
+    LDI HIGH(a)     ; Load &LOW(pointer).
+    LDI LOW(a)
+    LDM B           ; Load LOW(pointer).
+    MOV F C         ; Complete the pointer.
+    STM A           ; *pointer = a
+    
+.macro BC++ 8'p 8't0 8't1
+    MOV C F
+    MOV B A
+    LDI p C
+    LDI t0 B
+    STM F
+    LDI 0 F
+    LDI 1 B
+    ADD A
+    LDI t1 B
+    STM A
+    LDI t0 B
+    LDM A
+    LDI 0 B
+    ADD A
+    LDI t1 B
+    LDM B
+    MOV A C
+    

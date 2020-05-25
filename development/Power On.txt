@@ -1,0 +1,59 @@
+Note: This process took a long time to complete. I forgot to put dates on debug sessions, which is why this is not immediately obvious.
+
+Step 1:
+	Disable output enable microcode signals if possible by tying them to 5V:
+		Microcode signals:
+		ROM 1
+		0	!wrp		Program memory write
+		1	!rdp		Program memory read									Disable.
+		2	!aoe		Accumulator output enable							Disable.
+		3	!ashoe		Accumulator shift ouput enable						Disable.
+		4	fsors		Flag source
+		5	flck		Flag clock
+		6	!aluoe		ALU output enable									Disable.
+		7	aclk		Accumulator clock
+
+		ROM 2
+		8	sel0		ALU function select 0
+		9	sel1		ALU function select 1
+		a	sel2		ALU function select 2
+		b	bclk		b clock
+		c	!boe		b output enable										Disable.
+		d	!foe		Flag register output enable							Disable.
+		e	!jmp		Jump												May have branching problems due to this signal.
+		f	!pcoe		Program counter output enable						Disable.
+
+		ROM 3
+		10	!dtoe		Data bus transceiver output enable					Disable.
+		11	ddir		Data bus transceiver direction
+		12	pcck		Program counter clock
+		13	cclk		c register clock
+		14	!bcoe		Place b and c onto the program address bus			Disable.
+		15	!wrd		Data memory write
+		16	!rdd		Data memory read									Disable.
+		17	!upcrst		Microprogram counter reset
+		
+Log:
+	I ignored step 1.
+	The computer drew over 2 amps.
+	The Flag Register 3-state reached about 105 degrees F.
+	None of the capacitors were very hot. The highest temperature was 84 degrees F, which was 3 degrees higher than the rest.
+	The Flag Register 3-state is a 74LS244.
+	The Flag Register 3-state was inserted backwards.
+	The computer now draws about 800mA.
+	I neglected to provide a way to reset the program counter, and the 74163 counters do not reset to zero when power is applied.
+	Potential solution: Assert the !CLR signal on each counter, then let the state counter run through a single instruction. Assert !RESET and then set all !CLRs (include !RESET) to 5V. The computer will then be fully reset.
+	Computer fully reset.
+	Program memory progAddr[15] was connected to C register bit 0.
+	Pins progAddr[4,5,6,7] are high and should be low.
+	The address pins are acting fine now, but progData[0] was connected to !DTOE.
+	MicroComp executed it first instruction 0x00 (NOP).
+	The instruction at 0x001 was 0x01, which is the op-code for LDI #DE A. The correct instruction is 0x08. The rest of the test program is like this except for branches.
+	Microcode and test program have been reflashed.
+	FR output enable was not connected and Vcc was grounded.
+	Addition seems to be adding one to the accumulator even though carry is zero.
+	Computer draws a little less than 700mA.
+    Tested the 74381 under the same (theoretically) conditions on a breadboard, but it is now adding 0xE and 0xE (no carry) properly. The cause is probably A0, B0, Cn, or F0 getting pulled high somehow.
+    Cn seems to be disconnected. That couldn't be the problem, right? :^)
+    Microcode and program ROMs reflashed once again. This time the microcode is v1.1.1 and the program generates the Fibonacci number sequence.
+    Three out of the four modifications have been made. I have not set it up to read from the C register yet. Right now I am getting spurious loads to the A register. Good news: It's jumping.

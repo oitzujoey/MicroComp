@@ -1,0 +1,104 @@
+Instruction Set (v0.3) Simulation:
+Op-code		Assembly		Clock cycles	Description
+#00			NOP				2				No operation							Works
+#01			LDI byte A		4				prog[pc+1] -> A							Works
+#02			LDI byte B		4				prog[pc+1] -> B							Works
+#03			LDI byte C		4				prog[pc+1] -> C							Works
+#04			LDM A			4				data[C B] -> A							Works
+#05			LDM B			4				data[C B] -> B							Works
+#06			LDM C			4				data[C B] -> C							Works
+#07			LDP A			4				prog[C B] -> A							Works
+#08			LDP B			4				prog[C B] -> B							Works
+#09			LDP C			4				prog[C B] -> C							Works
+#0A			STM A			4				A -> data[C B]							Works
+#0B			STP A			4				A -> prog[C B]							Partially tested
+#0C			MOV A B			4				A -> B									Works
+#0D			MOV B A			4				B -> A									Works
+#0E			MOV A C			4				A -> C									Works
+#0F			MOV B C			4				B -> C									Works
+#10			BR.cc			4				F[cc] ? [B C] : pc + 1 -> pc
+	#80			BR.C			4				F[cc] = carry
+	#81			BR.N			4				F[cc] = negative
+	#82			BR.V			4				F[cc] = overflow
+	#83			BR.NZ			4				F[cc] = not zero
+	#84			BR.H			4				F[cc] = half carry
+	#85			BR.E			4				F[cc] = even parity
+	#86			BR.S			4				F[cc] = right-shift carry
+	#87			BR.T/JMP		4				F[cc] = true						Works
+#11			BR.ncc			4				!F[cc] ? [B C] : pc + 1 -> pc
+	#88			BR.NC			4				F[cc] = no carry
+	#89			BR.P/BR.NN		4				F[cc] = positive
+	#8A			BR.NV			4				F[cc] = no overflow
+	#8B			BR.Z			4				F[cc] = zero
+	#8C			BR.NH			4				F[cc] = no half carry
+	#8D			BR.D/BR.NE		4				F[cc] = odd parity
+	#8E			BR.NS			4				F[cc] = no right-shift carry
+	#8F			BR.F			4				F[cc] = false
+#12			SWF A			4				A -> F; F -> A							Works
+#13			SHR A			4				A>>1 -> A								Passed one test (no carry)
+#14			SHR B			4				A>>1 -> B								Passed one test (no carry)
+#15			ADD A			4				A + B + carry -> A						Passed one test (no carry)
+#16			ADD B			4				A + B + carry -> B						Passed one test (carry)
+#17			ADD C			4				A + B + carry -> C						Passed one test (carry)
+#18			SUB A			4				A - B - 1 + carry -> A					Passed one test (carry)
+#19			SUB B			4				B - A - 1 + carry -> B					Passed one test (carry)
+#1A			AND A			4				A & B -> A								Works
+#1B			AND B			4				A & B -> B								Works
+#1C			OR A			4				A | B -> A								Works
+#1D			OR B			4				A | B -> B								Works
+#1E			XOR A			4				A ^ B -> A								Works
+#1F			XOR B			4				A ^ B -> B								Works
+
+Instruction Set (v0.3) Hardware:
+Op-code		Assembly		Clock cycles	Description
+#00			NOP				2				No operation							Works
+#01			LDI byte A		4				prog[pc+1] -> A							Works
+#02			LDI byte B		4				prog[pc+1] -> B							Works
+#03			LDI byte C		4				prog[pc+1] -> C							Works
+#04			LDM A			4				data[C B] -> A							
+#05			LDM B			4				data[C B] -> B							
+#06			LDM C			4				data[C B] -> C							
+#07			LDP A			4				prog[C B] -> A							
+#08			LDP B			4				prog[C B] -> B							
+#09			LDP C			4				prog[C B] -> C							
+#0A			STM A			4				A -> data[C B]							
+#0B			STP A			4				A -> prog[C B]							
+#0C			MOV A B			4				A -> B									Works
+#0D			MOV B A			4				B -> A									Works
+#0E			MOV A C			4				A -> C									Works
+#0F			MOV B C			4				B -> C									Works
+#10			BR.cc			4				F[cc] ? [B C] : pc + 1 -> pc
+	#80			BR.C			4				F[cc] = carry
+	#81			BR.N			4				F[cc] = negative
+	#82			BR.V			4				F[cc] = overflow
+	#83			BR.NZ			4				F[cc] = not zero
+	#84			BR.H			4				F[cc] = half carry
+	#85			BR.E			4				F[cc] = even parity
+	#86			BR.S			4				F[cc] = right-shift carry
+	#87			BR.T/JMP		4				F[cc] = true						
+#11			BR.ncc			4				!F[cc] ? [B C] : pc + 1 -> pc
+	#88			BR.NC			4				F[cc] = no carry
+	#89			BR.P/BR.NN		4				F[cc] = positive
+	#8A			BR.NV			4				F[cc] = no overflow
+	#8B			BR.Z			4				F[cc] = zero
+	#8C			BR.NH			4				F[cc] = no half carry
+	#8D			BR.D/BR.NE		4				F[cc] = odd parity
+	#8E			BR.NS			4				F[cc] = no right-shift carry
+	#8F			BR.F			4				F[cc] = false
+#12			SWF A			4				A -> F; F -> A							Works
+#13			SHR A			4				A>>1 -> A								
+#14			SHR B			4				A>>1 -> B								
+#15			ADD A			4				A + B + carry -> A						
+#16			ADD B			4				A + B + carry -> B						
+#17			ADD C			4				A + B + carry -> C						
+#18			SUB A			4				A - B - 1 + carry -> A					
+#19			SUB B			4				B - A - 1 + carry -> B					
+#1A			AND A			4				A & B -> A								
+#1B			AND B			4				A & B -> B								
+#1C			OR A			4				A | B -> A								
+#1D			OR B			4				A | B -> B								
+#1E			XOR A			4				A ^ B -> A								
+#1F			XOR B			4				A ^ B -> B				
+
+Flags:
+	Even parity detected

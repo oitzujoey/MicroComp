@@ -1,0 +1,56 @@
+Twin Industries BB, top to bottom.
+
+Row 1 (Between ground and Vc symbols)
+74151	IC12	Flag decoder
+7432	IC18	Jump enable OR gate
+7486	IC9		ALU and Flags XOR
+74280	IC20	Parity flag generator
+74182	IC8		ALU carry generator
+74381	IC6		High nybble of ALU
+74381	IC5		Low nybble of ALU
+
+Row 2 (Between Va and Vb symbols)
+74244	IC13	Flag register 3-state
+74574	IC7		Flag register
+74257	IC4		High nybble flag input mux
+74257	IC3		Low nybble flag input mux
+74133	IC19	Ones detector for the "ones" flag
+74244	IC14	ALU 3-state output
+
+Row 3 (Nearest logo)
+Flash	IC22	Microcode chip 2
+Flash	IC23	Microcode chip 3
+74373	IC43	Instruction register
+74161	IC16	Microprogram counter
+
+Row 4 (spare BB added on to the side)
+556		Undocumented
+Flash	IC21	Microcode chip 1
+74374	IC27	Input
+74574	IC31	Output
+74260	IC17	Instruction register load signal (acts as bit 18 of the microcode)
+
+Pro's Kit BB, top to bottom.
+
+Row 1 (between ground and V2 symbols)
+74244	IC37	PC low 3-state
+Flash	IC24	Program ROM
+74244	IC32	Program bus-data bus transceiver
+SRAM	IC26	Data RAM
+7402	IC28	I/O decode NOR gates
+
+Row 2 (Under V1)
+74163	IC33	Program counter low
+74244	IC38	Program counter high 3-state	
+74244	IC40	BC high 3-state
+74244	IC39	BC low 3-state
+74244	IC11	A shift 3-state
+74244	IC10	A 3-state
+
+Row 3 (Under logo)
+74163	IC34	Program counter medium
+74163	IC35	Program counter high
+74574	IC41	C register
+74244	IC15	B register 3-state
+74574	IC2		B register
+74574	IC1		A register

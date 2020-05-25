@@ -1,0 +1,239 @@
+/*
+    Microcode v1.1.0 for MicroComp v1.1
+    Written by Joey Herguth on 7/11/2019
+*/
+
+; Define ROM characteristics and location of microcode bits.
+ROMS 3
+
+; Microcode depth is 16 words.
+WIDTH 8
+DEPTH 16
+
+ROM 1
+0	!wrp		;Program memory write
+1	!rdp		;Program memory read
+2	!aoe		;a output enable
+3	!ashoe		;a shift ouput enable
+4	fsors		;Flag source
+5	fclk		;Flag clock
+6	!aluoe		;ALU output enable
+7	aclk		;a clock
+
+ROM 2
+0	un0		    ;Unassigned 0
+1	un1		    ;Unassigned 1
+2	!coe		;c output enable
+3	bclk		;b clock
+4	!boe		;b output enable
+5	!foe		;Flag register output enable
+6	!jmp		;Jump												May have branching problems due to this signal.
+7	!pcoe		;Program counter output enable
+
+ROM 3
+0	!dtoe		;Data bus transciver output enable		
+1	ddir		;Data bus transciver direction
+2	pcck		;Program counter clock
+3	cclk		;c register clock
+4	!bcoe		;Place b and c onto the program address bus
+5	!wrd		;Data memory write
+6	!rdd		;Data memory read
+7	!upcrst		;Microprogram counter reset
+
+ASM 32
+
+//Fill undefined areas of ROM with these signals.
+FILL upcrst
+
+;Active low signals are treated as active high.
+
+0x00    ;LDI byte F      byte -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe 
+    rdp fclk pcoe pcck upcrst
+    
+0x01    ;LDI byte A      byte -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe 
+    rdp aclk pcoe pcck upcrst
+    
+0x02    ;LDI byte B      byte -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe 
+    rdp bclk pcoe pcck upcrst
+    
+0x03    ;LDI byte C      byte -> C
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe 
+    rdp cclk pcoe pcck upcrst
+    
+0x04    ;MOV F A         F -> A
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe aclk upcrst
+    
+0x05    ;MOV F B         F -> B
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe aclk upcrst
+    
+0x06    ;MOV F C         F -> C
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe cclk upcrst
+    
+0x07    ;MOV A F         A -> F
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe fclk upcrst
+    
+0x08    ;MOV A B         A -> B
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe bclk upcrst
+    
+0x09    ;MOV A C         A -> C
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe cclk upcrst
+    
+0x0A    ;MOV B F         B -> F
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe fclk upcrst
+    
+0x0B    ;MOV B A         B -> A
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe aclk upcrst
+    
+0x0C    ;MOV B C         B -> C
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe cclk upcrst
+    
+0x0D    ;MOV C F         C -> F
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe fclk upcrst
+    
+0x0E    ;MOV C A         C -> A
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe aclk upcrst
+    
+0x0F    ;MOV C B         C -> B
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe bclk upcrst
+    
+0x10    ;LDM F           data[C B] -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    fclk rdd upcrst
+    
+0x11    ;LDM A           data[C B] -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    aclk rdd upcrst
+    
+0x12    ;LDM B           data[C B] -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    bclk rdd upcrst
+    
+0x13    ;LDP F           prog[C B] -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp fclk dtoe bcoe upcrst
+    
+0x14    ;LDP A           prog[C B] -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp aclk dtoe bcoe upcrst
+    
+0x15    ;LDP B           prog[C B] -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp bclk dtoe bcoe upcrst
+    
+0x16    ;STM F           F -> data[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    wrd foe upcrst
+    
+0x17    ;STM A           A -> data[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    wrd aoe upcrst
+    
+0x18    ;STP F           F -> prog[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    foe dtoe ddir bcoe
+    wrp foe dtoe ddir bcoe upcrst
+    
+0x19    ;STP A           A -> prog[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    aoe dtoe ddir bcoe
+    wrp aoe dtoe ddir bcoe upcrst
+    
+0x1A    ;BR.cc           F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+    
+0x1B    ;BR.ncc          !F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+    
+0x1C    ;ALU ? ? A       f(A, B) -> A
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe aclk upcrst
+    
+0x1D    ;ALU B           f(A, B) -> B
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe bclk upcrst
+    
+0x1E    ;SHR A           A >> 1 -> A
+    rdp pcoe
+    rdp pcoe pcck
+    fsors ashoe
+    fsors fclk ashoe aclk upcrst
+    
+0x1F    ;NOP             No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+    

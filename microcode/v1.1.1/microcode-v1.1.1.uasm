@@ -1,0 +1,329 @@
+/*
+    Microcode v1.1.0 for MicroComp v1.1
+    Written by Joey Herguth on 7/11/2019
+*/
+
+; Define ROM characteristics and location of microcode bits.
+ROMS 3
+
+; Microcode depth is 16 words.
+WIDTH 8
+DEPTH 16
+
+ROM 1
+0	!wrp		;Program memory write
+1	!rdp		;Program memory read
+2	!aoe		;a output enable
+3	!ashoe		;a shift ouput enable
+4	fsors		;Flag source
+5	fclk		;Flag clock
+6	!aluoe		;ALU output enable
+7	aclk		;a clock
+
+ROM 2
+0	un0		    ;Unassigned 0
+1	un1		    ;Unassigned 1
+2	!coe		;c output enable
+3	bclk		;b clock
+4	!boe		;b output enable
+5	!foe		;Flag register output enable
+6	!jmp		;Jump												May have branching problems due to this signal.
+7	!pcoe		;Program counter output enable
+
+ROM 3
+0	!dtoe		;Data bus transciver output enable		
+1	ddir		;Data bus transciver direction
+2	!pcck		;Program counter clock
+3	cclk		;c register clock
+4	!bcoe		;Place b and c onto the program address bus
+5	!wrd		;Data memory write
+6	!rdd		;Data memory read
+7	!upcrst		;Microprogram counter reset
+
+ASM 64
+
+//Fill undefined areas of ROM with these signals.
+FILL upcrst
+
+;Active low signals are treated as active high.
+
+0x00;       LDI byte F      4               byte -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe dtoe
+    rdp fclk pcoe pcck dtoe upcrst
+0x01;       LDI byte A      4               byte -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe dtoe
+    rdp aclk pcoe pcck dtoe upcrst
+0x02;       LDI byte B      4               byte -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe dtoe
+    rdp bclk pcoe pcck dtoe upcrst
+0x03;       LDI byte C      4               byte -> C
+    rdp pcoe
+    rdp pcoe pcck
+    rdp pcoe dtoe
+    rdp cclk pcoe pcck dtoe upcrst
+0x04;       MOV F A         4               F -> A
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe aclk upcrst
+0x05;       MOV F B         4               F -> B
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe bclk upcrst
+0x06;       MOV F C         4               F -> C
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    foe cclk upcrst
+0x07;       MOV A F         4               A -> F
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe fclk upcrst
+0x08;       MOV A B         4               A -> B
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe bclk upcrst
+0x09;       MOV A C         4               A -> C
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    aoe cclk upcrst
+0x0A;       MOV B F         4               B -> F
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe fclk upcrst
+0x0B;       MOV B A         4               B -> A
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe aclk upcrst
+0x0C;       MOV B C         4               B -> C
+    rdp pcoe
+    rdp pcoe pcck
+    boe
+    boe cclk upcrst
+0x0D;       MOV C F         4               C -> F
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe fclk upcrst
+0x0E;       MOV C A         4               C -> A
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe aclk upcrst
+0x0F;       MOV C B         4               C -> B
+    rdp pcoe
+    rdp pcoe pcck
+    coe
+    coe bclk upcrst
+0x10;       LDM F           4               data[C B] -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    fclk rdd upcrst
+0x11;       LDM A           4               data[C B] -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    aclk rdd upcrst
+0x12;       LDM B           4               data[C B] -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    bclk rdd upcrst
+0x13;       LDM C           4               data[C B] -> C
+    rdp pcoe
+    rdp pcoe pcck
+    rdd
+    cclk rdd upcrst
+0x14;       LDP F           4               prog[C B] -> F
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp fclk dtoe bcoe upcrst
+0x15;       LDP A           4               prog[C B] -> A
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp aclk dtoe bcoe upcrst
+0x16;       LDP B           4               prog[C B] -> B
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp bclk dtoe bcoe upcrst
+0x17;       LDP C           4               data[C B] -> C
+    rdp pcoe
+    rdp pcoe pcck
+    rdp dtoe bcoe
+    rdp cclk dtoe bcoe upcrst
+0x18;       STM F           4               F -> data[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    foe
+    wrd foe upcrst
+0x19;       STM A           4               A -> data[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    aoe
+    wrd aoe upcrst
+0x1A;       STP F           4               F -> prog[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    foe dtoe ddir bcoe
+    wrp foe dtoe ddir bcoe upcrst
+0x1B;       STP A           4               A -> prog[C B]
+    rdp pcoe
+    rdp pcoe pcck
+    foe dtoe ddir bcoe
+    wrp aoe dtoe ddir bcoe upcrst
+0x1C;       BR.cc           4               F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+0x1D;       BR.cc           4               F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+0x1E;       BR.ncc          4               !F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+0x1F;       BR.ncc          4               !F[cc] ? C B : pc -> pc
+    rdp pcoe
+    rdp pcoe pcck
+    jmp
+    jmp pcck upcrst
+0x20;       ALU ? ? F       4               f(A, B) -> F
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    aluoe fclk upcrst
+0x21;       ALU ? ? F       4               f(A, B) -> F
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    aluoe fclk upcrst
+0x22;       ALU ? ? A       4               f(A, B) -> A
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe aclk upcrst
+0x23;       ALU ? ? A       4               f(A, B) -> A
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe aclk upcrst
+0x24;       ALU ? ? B       4               f(A, B) -> B
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe bclk upcrst
+0x25;       ALU ? ? B       4               f(A, B) -> B
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe bclk upcrst
+0x26;       ALU ? ? C       4               f(A, B) -> C
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe cclk upcrst
+0x27;       ALU ? ? C       4               f(A, B) -> C
+    rdp pcoe
+    rdp pcoe pcck
+    fsors aluoe
+    fsors fclk aluoe cclk upcrst
+0x28;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x29;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2A;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2B;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2C;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2D;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2E;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x2F;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x30;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x31;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x32;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x33;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x34;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x35;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x36;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x37;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x38;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x39;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x3A;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x3B;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x3C;       Reserved        2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst
+0x3D;       SHR A           4               A >> 1 -> A
+    rdp pcoe
+    rdp pcoe pcck
+    fsors ashoe
+    fsors fclk ashoe aclk upcrst
+0x3E;       SWP A B         8               A -> B, B -> A
+    rdp pcoe
+    rdp pcoe pcck
+    aluoe
+    aluoe aclk
+    aluoe
+    aluoe bclk
+    aluoe
+    aluoe aclk upcrst
+0x3F;       NOP             2               No operation
+    rdp pcoe
+    rdp pcoe pcck upcrst

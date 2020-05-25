@@ -1,0 +1,15 @@
+The emulator will be able to run MicroComp programs without modification.
+The programs can be loaded as an Intel HEX file, a text file with hex code, a text file with binary code, or an assembly language file.
+The emulator will use microcode files from the workspace folder.
+The microcode will be encoded in Intel HEX, ASCII binary, or ASCII hexadecimal.
+The emulator will look for a configuration file on startup.
+The configuration file will tell the emulator:
+	where to get the microcode
+	what format the microcode will be in
+	whether to run the program on startup
+	what program to run on startup
+	what format the program will be in
+	where breakpoints are set
+	the size of memory
+The configuration file format is not case sensitive.
+When a breakpoint is hit, the computer will dump the registers into one file, and the memory into another file.

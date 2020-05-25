@@ -1,0 +1,65 @@
+DMA controller for a computer that really does not need one.
+
+Description
+	A DMA controller that moves 256B blocks between two of 512 pages in memory. The destination segment address is stored in the B register and the source segment address is stored in the A register. The 6-bit address of the DMA controller along with the 2-bit mode is loaded into the C register. To trigger a DMA, the CPU then moves a register to data memory. The CPU will halt, and the DMA controller will move the block of memory. Once the transfer is complete, the CPU regains control.
+
+BUSAK = BUSRQ & IRLD				The CPU will be trying to read an instruction. This fact can only be changed in hardware.
+uPCE = !BUSAK						When the CPU is reading an instruction, it has not started executing it. The active signals in the microcode at this point are the same for each instruction, which makes this a perfect point to interrupt the CPU.
+PCOE_DMA = PCOE | BUSAK				Disable the program address bus.
+DMABCOE								Disable the data address bus. This requires two more 3-state buffers.
+DTOE_DMA = DTOE | BUSAK				Disable the data bus.
+RDP_DMA = RDP | BUSAK & DMARDP		Disable the program data bus and hand over control to the DMA controller.
+RDD_DMA = RDD & DMARDD				Allow this line to be used by the DMA controller.
+WRP_DMA = WRP & DMAWRP				Allow this line to be used by the DMA controller.
+WRD_DMA = WRD & DMAWRD				Allow this line to be used by the DMA controller.
+
+Decision: Should the controller let the CPU execute an instruction every other cycle to guarantee that it will keep running the program?
+	No. This will add hardware complexity (probably not much) and not really affect the performance of the CPU.
+
+Registers
+0	Source segment address
+1	Destination segment address
+2	Trigger DMA (Write only)
+
+An internal 8-bit up counter will trigger an "End of DMA" signal when it overflows
+
+address = {8'segment, 8'counter}
+
+Modes
+0	data-data
+1	data-program
+2	program-data
+3	program-program
+
+F:	Unused
+A:	Source segment
+B:	Destination segment
+C:	{6'DMA_addr, 2'mode}
+
+Rough chip count
+	registers		2		segment registers
+	counters		2		address counters
+	3-states		3		BC register 3-state and counter 3-state
+	multiplexers	2		segment register multiplexer
+	D flip-flops	1/2		DMA "uPC"
+
+input clk busak cntlow|cntc
+
+busak	rco	en1	|	en1	en2
+0		0	0	|	1	0
+0		0	1	|	1	1
+0		1	0	|	0	0
+0		1	1	|	0	0
+1		0	0	|	1	0
+1		0	1	|	1	1
+1		1	0	|	1	0
+1		1	1	|	1	1
+
+en1 = busak | !rco
+en2 = reg(clk){!en2 & en1}
+
+busrq	
+0		
+0		
+1		
+1		

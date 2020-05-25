@@ -1,0 +1,169 @@
+/*  Is it possible to implement subroutines?
+    Apparently, the answer is yes! And without self-modifying code!
+    
+    The bad news:
+    Manipulating a stack is a very processor intensive task. I need to write leaf routines that do this for me to save memory and simplify writing the code.
+*/
+
+/** Leaf Subroutines **/
+
+.prog
+.addr 0x0000
+
+START:
+    //  Do stuff.
+    LDI LOW(LEAF) B     ; Load the return address variable.
+    LDI HIGH(LEAF) C
+    LDI LOW(PART1) A    ; Put the address of the return location there.
+    STP A
+    LDI LOW(LEAF+1) B   ; Load the return address variable.
+    LDI HIGH(LEAF+1) C
+    LDI HIGH(PART1) A   ; Put the address of the return location there.
+    STP A
+    LDI LOW(SUB) B      ; GOSUB
+    LDI HIGH(SUB) C
+    JMP
+PART1:
+    //  Do stuff.
+    LDI LOW(LEAF) B
+    LDI HIGH(LEAF) C
+    LDI LOW(PART2) A
+    STP A
+    LDI LOW(LEAF+1) B
+    LDI HIGH(LEAF+1) C
+    LDI HIGH(PART2) A
+    STP A
+    LDI LOW(SUB) B
+    LDI HIGH(SUB) C
+    JMP
+PART2:
+    //  Do stuff.
+    MOV B A             ; Tailored to this specific case. Saves a byte of memory.
+    LDI LOW(LEAF) B
+    LDI HIGH(LEAF) C
+    STP A
+    LDI LOW(LEAF+1) B
+    LDI HIGH(LEAF+1) C
+    LDI HIGH(PART3) A
+    STP A
+    LDI LOW(SUB) B
+    LDI HIGH(SUB) C
+    JMP
+PART3:
+    JMP
+    
+SUB:
+    //  Do stuff.
+    LDI LOW(LEAF) B
+    LDI HIGH(LEAF) C
+    LDP A
+    LDI LOW(LEAF+1) B
+    LDI HIGH(LEAF+1) C
+    LDP C
+    MOV A B
+    JMP
+    
+.addr 0x8000
+.ram
+
+LEAF:
+    .const 0x00 0x00
+
+/** Nested Subroutines **/
+
+.prog
+.addr 0x0000
+
+.prog
+.addr 0x0000
+
+START:
+    LDI LOW(SP) B       ; Initialize stack pointer (SP) to the top of RAM.
+    LDI HIGH(SP) C
+    LDI LOW(MEMTOP) A
+    STM A
+    LDI LOW(SP+1) B
+    LDI HIGH(MEMTOP) A
+    STM A
+    
+    //  Do stuff.
+    
+    //  The goal of most of the code below is to push the return address onto the stack. I should probably embed this in a subroutine to save space.
+    LDI LOW(SP) B       ; Put SP into CB.
+    LDI HIGH(SP) C
+    LDM A
+    LDI LOW(SP+1) B
+    LDM C
+    MOV A B
+    LDI HIGH(PART1) A   ; Store MSB of return address on the stack.
+    STM A
+    LDI 0x00 F          ; Subtract one from SP. (LSB)
+    LDI 0x01 A
+    SUB B A A
+    LDI LOW(SP) B
+    LDI HIGH(SP) C
+    STM A
+    LDI LOW(SP+1) B     ; (MSB)
+    LDM B
+    LDI 0x00 A
+    SUB B A A
+    LDI LOW(SP+1) B
+    STM A
+    LDI LOW(SP) B       ; Put SP-1 into CB.
+    LDM B
+    MOV A C
+    LDI LOW(PART1) A    ; Store LSB of return address on the stack.
+    STM A
+    LDI 0x00 F          ; Subtract one from SP. (LSB)
+    LDI 0x01 A
+    SUB B A A
+    LDI LOW(SP) B
+    LDI HIGH(SP) C
+    STM A
+    LDI LOW(SP+1) B     ; (MSB)
+    LDM B
+    LDI 0x00 A
+    SUB B A A
+    LDI LOW(SP+1) B
+    STM A
+    LDI HIGH(PART1) C   ; GOSUB
+    LDI LOW(PART1) B
+    JMP
+PART1:
+    //  Do stuff.
+    
+    //  TODO: Pretty much copy the above code into here.
+END:
+    JMP
+    
+SUB:
+    //  Do stuff.
+    
+    //  TODO:   Pop return address into TEMP0&1 and return.
+    LDI LOW(TEMP0) B
+    LDI HIGH(TEMP0) C
+    LDP A
+    LDI LOW(TEMP1) B
+    LDI HIGH(TEMP1) C
+    LDP C
+    MOV A B
+    JMP
+    
+.addr 0x8000
+.ram
+
+.data
+.ram
+.addr 0x0000
+
+TEMP0:
+    .const 0x00
+TEMP1:
+    .const 0x00
+SP:
+    .const 0xFF 0xFF
+
+.addr 0xFFFF
+
+MEMTOP:
+    .const 0x00

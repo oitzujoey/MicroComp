@@ -1,0 +1,40 @@
+
+74LS151		IC12	Flag decoder							10  mA
+74AS32		IC18	Jump enable OR gate						26.6mA
+7486		IC9		ALU and Flags XOR
+74280		IC20	Parity flag generator
+74182		IC8		ALU carry generator
+74381		IC6		High nybble of ALU
+74381		IC5		Low nybble of ALU
+74LS244		IC13	Flag register 3-state					This chip got to about 105 degrees F. Don't put your chips in backwards. Was drawing at least an amp.
+74574		IC7		Flag register
+74257		IC4		High nybble flag input mux
+74257		IC3		Low nybble flag input mux
+74133		IC19	Ones detector for the "ones" flag
+74244		IC14	ALU 3-state output
+W49F002J	IC22	Microcode chip 2						50  mA
+39SF020A	IC23	Microcode chip 3						12  mA
+74373		IC43	Instruction register
+74161		IC16	Microprogram counter
+556			Undocumented
+39SF020		IC21	Microcode chip 1						30  mA
+74374		IC27	Input
+74574		IC31	Output
+74260		IC17	Instruction register load signal
+74244		IC37	PC low 3-state
+M28F101		IC24	Program ROM								30  mA
+74244		IC32	Program bus-data bus transceiver
+SRAM		IC26	Data RAM
+7402		IC28	I/O decode NOR gates
+74163		IC33	Program counter low
+74244		IC38	Program counter high 3-state	
+74244		IC40	BC high 3-state
+74244		IC39	BC low 3-state
+74244		IC11	A shift 3-state
+74244		IC10	A 3-state
+74163		IC34	Program counter medium
+74163		IC35	Program counter high
+74574		IC41	C register
+74244		IC15	B register 3-state
+74574		IC2		B register
+74574		IC1		A register
