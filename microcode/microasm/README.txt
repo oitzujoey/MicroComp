@@ -1,7 +1,7 @@
 Microasm
 
 Microasm is a simple assembler for microcode. It is not dedicated to any CPU, but it works best for non-branching microcode. See the MicroComp microcode for examples of how to use this.
-Syntax checking is performed by throwing a segmentation fault. Use at your own risk.
+The user is notified of syntax errors by throwing a segmentation fault. Use at your own risk.
 
 Also included is a text to Intel HEX converter.
 
