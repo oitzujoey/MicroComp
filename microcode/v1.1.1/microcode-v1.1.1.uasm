@@ -3,6 +3,9 @@
     Written by Joey Herguth on 7/11/2019
 */
 
+; Microasm version
+VERSION 0.1
+
 ; Define ROM characteristics and location of microcode bits.
 ROMS 3
 

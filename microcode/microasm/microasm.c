@@ -11,6 +11,7 @@
 #include <sys/types.h>
 
 // #define DEBUG
+#define MICROASM_VERSION "0.1"
 
 typedef struct {
     char **bits;
@@ -423,6 +424,7 @@ void parseUasm(char *uasmStr, Roms *roms, Asm *_asm) {
     const char FILL[] = "FILL ";
     const char WIDTH[] = "WIDTH ";
     const char DEPTH[] = "DEPTH ";
+    const char VERSION[] = "VERSION ";
 
     char **lines;
     int numberOfLines = 1;
@@ -500,6 +502,16 @@ void parseUasm(char *uasmStr, Roms *roms, Asm *_asm) {
                 printf("On line %i: ROM depth must be an positive integer greater than zero.\n", i);
                 perror("ERROR");
                 exit(1);
+            }
+
+        } else if (0 == strncmp(lines[i], VERSION, strlen(VERSION))) {
+            lines[i] += strlen(VERSION);
+            if (strncmp(lines[i], MICROASM_VERSION, strlen(MICROASM_VERSION)+1)) {
+                printf("Warning: Microassembler and microassembly versions do not match.\n"
+                       "\tMicroassembler version: %s\n"
+                       "\tMicroassembly version:  %s\n",
+                       MICROASM_VERSION,
+                       lines[i]);
             }
         }
     }
