@@ -506,6 +506,7 @@ void parseUasm(char *uasmStr, Roms *roms, Asm *_asm) {
 
         } else if (0 == strncmp(lines[i], VERSION, strlen(VERSION))) {
             lines[i] += strlen(VERSION);
+            // @FIXME Do a numeric comparison.
             if (strncmp(lines[i], MICROASM_VERSION, strlen(MICROASM_VERSION)+1)) {
                 printf("Warning: Microassembler and microassembly versions do not match.\n"
                        "\tMicroassembler version: %s\n"
