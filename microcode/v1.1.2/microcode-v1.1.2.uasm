@@ -4,7 +4,7 @@
 */
 
 ; Microasm version
-VERSION 0.2
+VERSION 0.1
 
 ; Define ROM characteristics and location of microcode bits.
 ROMS 3
@@ -46,7 +46,7 @@ ROM 3
 ASM 64
 
 //Fill undefined areas of ROM with these signals.
-FILL upcrst
+FILL upcrst rdp pcoe
 
 ;Active low signals are treated as active high.
 
@@ -330,5 +330,3 @@ FILL upcrst
 0x3F;       NOP             2               No operation
     rdp pcoe
     rdp pcoe pcck upcrst
-DEFAULT
-    rdp pcoe

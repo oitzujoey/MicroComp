@@ -1,0 +1,9 @@
+Attempt #1:
+    Modifications:
+        Three registers on the output of the microcode ROMs. These registers are then used as the real microcode.
+        Clock the instruction register with an inverted copy of the clock. This is ORed with the IRLD signal. This will add a wait state during IR load, but at least it should work.
+    Chips:
+        3x  74*574
+        1/4 74*32
+        1/6 74*04
+        Total is 5 chips.
