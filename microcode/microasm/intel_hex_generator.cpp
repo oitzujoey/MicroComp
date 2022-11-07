@@ -1,10 +1,10 @@
-/*\Intel HEX File Generator
+/* Intel HEX File Generator
  * Author: Joey Herguth
  * Last change: 7/18/2019
  * Description: Generates an Intel HEX file from my custom ROM description format: Put the binary, octal, decimal, or hexidecimal
    values into a file in order of occurance in the ROM. The base address is always zero. Comments are allowed and must use either
    "//" or ';'.
-\*/
+ */
 
 #include <iostream>
 #include <fstream>

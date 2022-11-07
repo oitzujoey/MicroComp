@@ -1,1 +1,1 @@
-Design is complete, the computer has been built, and it successfully executes several instructions. Some modifications must be made to the hardware for programs to run properly. This may involve capacitors. Why did I go through with this flawed design?
+Design is complete, the computer has been built, and it successfully executes several instructions. Some modifications must be made to the hardware for programs to run properly. This will involve registering the output of the microcode.
