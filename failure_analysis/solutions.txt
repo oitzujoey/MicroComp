@@ -4,9 +4,8 @@ Attempt #1:
         Clock the instruction register with an inverted copy of the clock. This is ORed with the IRLD signal. This will add a wait state during IR load, but at least it should work.
     Chips:
         3x  74*574
-        1/4 74*32
         1/6 74*04
-        Total is 5 chips.
+        Total is 4 chips.
 
 It might be a good idea to use microcode output registers that reset to a known state and then use inverters to get the proper polarity. I don't know if this is really needed since shorts should be a problem for a max of one clock cycle. This could actually cause problems with race conditions, but the rest of the design should be made to elimiate those.
 
