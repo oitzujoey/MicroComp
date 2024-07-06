@@ -1,0 +1,217 @@
+(include "/usr/local/share/duck-lisp/library.dl")
+
+(comment Call like so:
+         duck-lisp "(__comptime (__var file \"fibonacci.ucmp\")) (include \"assembler.dl\")"
+         The output is written to "fibonacci.bin")
+
+
+
+(var nothing-type (make-type))
+(var nothing (make-instance nothing-type () ()))
+(defun nothing? (value)
+  (= (type-of value) nothing-type))
+
+
+(var program-memory (quote program-memory))
+(var data-memory (quote data-memory))
+(var address-space program-memory)
+
+(var program-address 0x0000)
+(var data-address 0x0000)
+(var address program-address)
+
+(defun select-address-space (next-address-space)
+  (if (= address-space program-memory)
+      (setq program-address address)
+      (setq data-address address))
+  (if (= next-address-space program-memory)
+      (setq address program-address)
+      (setq address data-address))
+  (setq address-space next-address-space)
+  nothing)
+
+
+(var label-type (make-type))
+(defun make-label ()
+  (make-instance label-type nothing ()))
+(defun label? (value)
+  (= (type-of value) label-type))
+
+(defun label-source (label)
+  (composite-value label))
+(defun set-label-source (label value)
+  (set-composite-value label value))
+
+(defun / (a b)
+  (when (label? a)
+    (to a (label-source)))
+  (when (label? b)
+    (to b (label-source)))
+  (/ a b))
+
+(defun mod (a b)
+  (when (label? a)
+    (to a (label-source)))
+  (when (label? b)
+    (to b (label-source)))
+  (mod a b))
+
+
+(defmacro declare-label (name)
+  (` (var (, name) (make-label))))
+
+(defun label (label)
+  (set-label-source label address))
+
+(defun allocate (name length)
+  (label name))
+
+
+(var register-type (make-type))
+(defun make-register (value)
+  (make-instance register-type value ()))
+(defun register? (value)
+  (= (type-of value) register-type))
+
+(var f (make-register 0))
+(var a (make-register 1))
+(var b (make-register 2))
+(var c (make-register 3))
+
+
+(defun log-error (message)
+  (println "Error: " message))
+
+
+(var byte-type (make-type))
+(defun make-byte (value)
+  (make-instance byte-type value ()))
+(defun byte? (value)
+  (cond (integer? value) (if (and (< value 0x100) (>= value 0))
+                             true
+                             (log-error "Value out of range"))
+        (= (type-of value) byte-type) true
+        (closure? value) true
+        false))
+
+
+(defun high (value)
+  (if (or (integer? value) (label? value))
+      (lambda () (/ value 0x0100))
+      (log-error "Argument must be an integer or label")))
+
+(defun low (value)
+  (if (or (integer? value) (label? value))
+      (lambda () (mod value 0x0100))
+      (log-error "Argument must be an integer or label")))
+
+
+(var instructions ())
+
+(defmacro definstruction (name parameters &rest body)
+  (` (defun (, name) (, parameters) (,@ body))))
+
+(defun push-instruction-bytes (&rest bytes)
+  (var bytes-length (length bytes))
+  (push (cons bytes-length bytes) instructions)
+  (to address (+ bytes-length))
+  nothing)
+
+(defun ldi (constant destination-register)
+  (if (byte? constant)
+      (if (register? destination-register)
+          (push-instruction-bytes (+ 0x00 (* 4 (composite-value destination-register)))
+                                  constant)
+          (log-error "Second argument must be a register"))
+      (log-error "First argument must be a byte")))
+
+(defun jmp () (push-instruction-bytes 0x77))
+
+(var nop-instruction 0xFC)
+(defun nop () (push-instruction-bytes nop-instruction))
+
+(defun mov (source-register destination-register)
+  (if (register? source-register)
+      (if (register? destination-register)
+          (
+           (var destination (composite-value destination-register))
+           (var f (composite-value f))
+           (var a (composite-value a))
+           (var b (composite-value b))
+           (var c (composite-value c))
+           (push-instruction-bytes (switch (composite-value source-register)
+                                           f (switch destination
+                                                     f nop-instruction
+                                                     a 0x10
+                                                     b 0x14
+                                                     c 0x18)
+                                           a (switch destination
+                                                     f 0x1C
+                                                     a nop-instruction
+                                                     b 0x20
+                                                     c 0x24)
+                                           b (switch destination
+                                                     f 0x28
+                                                     a 0x2C
+                                                     b nop-instruction
+                                                     c 0x30)
+                                           c (switch destination
+                                                     f 0x34
+                                                     a 0x38
+                                                     b 0x3C
+                                                     c nop-instruction))))
+          (log-error "Second argument must be a register"))
+      (log-error "First argument must be a register")))
+
+(defun add (destination-register)
+  (if (register? destination-register)
+      (push-instruction-bytes (+ 0x83 (* 8 (composite-value destination-register))))
+      (log-error "Argument must be a register")))
+
+(defun stm (source-register)
+  (if (and (register? source-register)
+           (or (= (composite-value source-register) (composite-value f))
+               (= (composite-value source-register) (composite-value a))))
+      (push-instruction-bytes (+ 0x60 (* 4 (composite-value source-register))))
+      (log-error "Argument must be the \"f\" or \"a\" registers")))
+
+
+(defmacro include-script-arg ()
+  (` (include (, file))))
+(include-script-arg)
+
+(defun print-hex-digit (uint4)
+  (if (< uint4 10)
+      (print uint4)
+      (print (__make-string (vector (- (+ uint4 65) 10))))))
+
+(defun print-hex-uint8 (uint8)
+  (print-hex-digit (/ uint8 16))
+  (print-hex-digit (mod uint8 16)))
+
+(comment Write instructions list into bytecode)
+(var bytecode-list ())
+(dolist element (nreverse instructions)
+        (dolist element (cdr element)
+                (when (integer? element)
+                  (
+                   (push element bytecode-list)))
+                (when (closure? element)
+                  (
+                   (push (element) bytecode-list)))))
+
+(var bytecode (make-string (nreverse bytecode-list)))
+(dolist element bytecode
+        (print-hex-uint8 element))
+
+(var binary-file-name (
+                       (var file (comptime file))
+                       (var i 0)
+                       (while (and (< i (__length file)) (≠ (elt file i) (elt "." 0)))
+                         (to i (1+)))
+                       (to i (1+))
+                       (setq file (concatenate (substring file 0 i) "bin"))
+                       file))
+(println " → " binary-file-name)
+(var binary-file (open-file binary-file-name "w"))
+(fwrite binary-file bytecode)

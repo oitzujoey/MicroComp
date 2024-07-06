@@ -13,10 +13,10 @@ General Information:
 One I/O port
 Modified Harvard Architecture
 4 registers
-	A	arithmetic/flag swap register
-	B	arithmetic/index register
-	C	index register
-	F	flag register
+    A   arithmetic/flag swap register
+    B   arithmetic/index register
+    C   index register
+    F   flag register
 
 Instruction Format:
 {opcode[4:0], cc[2:0]}
@@ -50,23 +50,23 @@ Instruction Assembly        Clock cycles    Description
 #C0         STP F           4               F -> prog[C B]
 #C8         STP A           4               A -> prog[C B]
 #D0         BR.cc           4               F[cc] ? C B : pc -> pc
-    #D0         BR.C			4               F[cc] = carry
-    #D1         BR.N			4               F[cc] = negative
-    #D2         BR.V			4               F[cc] = overflow
-    #D3         BR.NZ			4               F[cc] = not zero
-    #D4         BR.H			4               F[cc] = half carry
-    #D5         BR.E			4               F[cc] = even parity
-    #D6         BR.S			4               F[cc] = right-shift carry
-    #D7         BR.T/JMP		4               F[cc] = true
+    #D0         BR.C            4               F[cc] = carry
+    #D1         BR.N            4               F[cc] = negative
+    #D2         BR.V            4               F[cc] = overflow
+    #D3         BR.NZ           4               F[cc] = not zero
+    #D4         BR.H            4               F[cc] = half carry
+    #D5         BR.E            4               F[cc] = even parity
+    #D6         BR.S            4               F[cc] = right-shift carry
+    #D7         BR.T/JMP        4               F[cc] = true
 #D8         BR.ncc          4               !F[cc] ? C B : pc -> pc
-    #D8         BR.NC			4               F[cc] = no carry
-    #D9         BR.P/BR.NN		4               F[cc] = positive
-    #DA         BR.NV			4               F[cc] = no overflow
-    #DB         BR.Z			4               F[cc] = zero
-    #DC         BR.NH			4               F[cc] = no half carry
-    #DD         BR.D/BR.NE		4               F[cc] = odd parity
-    #DE         BR.NS			4               F[cc] = no right-shift carry
-    #DF         BR.F/NOOP		4               F[cc] = false
+    #D8         BR.NC           4               F[cc] = no carry
+    #D9         BR.P/BR.NN      4               F[cc] = positive
+    #DA         BR.NV           4               F[cc] = no overflow
+    #DB         BR.Z            4               F[cc] = zero
+    #DC         BR.NH           4               F[cc] = no half carry
+    #DD         BR.D/BR.NE      4               F[cc] = odd parity
+    #DE         BR.NS           4               F[cc] = no right-shift carry
+    #DF         BR.F/NOOP       4               F[cc] = false
 #E0         ALU ? ? A       4               f(A, B) -> A
     #E0         CLR A           4               #00 -> A
     #E1         SUB B A A       4               B - A -> A
@@ -90,16 +90,16 @@ Instruction Assembly        Clock cycles    Description
 
 Flag Register Contents:
 
-bit		symbol	use
+bit     symbol  use
 ---------------------------
-0		C		Carry - Is set when a carry occurs or a borrow does not occur.
-1		N		Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
-2		V		Overflow - Is set when the sign of the result is not correct.
-3		!Z		Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
-4		H		Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
-5		E		Even Parity - Is set when the parity is even.
-6		S		Right-Shift Carry - Is the lower bit of A before the carry occurred.
-7		T		True - Always high. Is used for jumps and two cycle nops. While this flag can be modified with the SWF instruction, a BR.cc instruction always reads T as true.
+0       C       Carry - Is set when a carry occurs or a borrow does not occur.
+1       N       Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
+2       V       Overflow - Is set when the sign of the result is not correct.
+3       !Z      Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
+4       H       Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
+5       E       Even Parity - Is set when the parity is even.
+6       S       Right-Shift Carry - Is the lower bit of A before the carry occurred.
+7       T       True - Always high. Is used for jumps and two cycle nops. While this flag can be modified with the SWF instruction, a BR.cc instruction always reads T as true.
 
 Instructions that affect the flags:
 SHR A
@@ -109,40 +109,40 @@ ALU A/B/C
 Computer Memory Map:
 
 Program memory
-		 _______________
-#0000	|_______________|	Reset/ROM
-#0001	|				|	ROM
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
-		|				|
-#FFFF	|_______________|
+         _______________
+#0000   |_______________|   Reset/ROM
+#0001   |               |   ROM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+#FFFF   |_______________|
 
 Data memory
-		 _______________
-#0000	|				|	RAM
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
-		|				|
-		|_______________|
-#1000	|				|	I/O port
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
-		|				|
-#FFFF	|_______________|
+         _______________
+#0000   |               |   RAM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+        |_______________|
+#1000   |               |   I/O port
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+#FFFF   |_______________|
 
 
 Pseudo Instructions:
 
-name			use
-.prog			All code below this line will be put in program memory.
-.data			All code below this line will be put in data memory.
-.addr address	Sets the base address of the instructions that follow.
-.macro name		Tells the assembler that the following code is a macro.
-.endmacro		Tells the assembler that the end of the macro code has been reached.
-.const data		Places a list of data in memory. data can be a comma separated list or a string.
+name            use
+.prog           All code below this line will be put in program memory.
+.data           All code below this line will be put in data memory.
+.addr address   Sets the base address of the instructions that follow.
+.macro name     Tells the assembler that the following code is a macro.
+.endmacro       Tells the assembler that the end of the macro code has been reached.
+.const data     Places a list of data in memory. data can be a comma separated list or a string.

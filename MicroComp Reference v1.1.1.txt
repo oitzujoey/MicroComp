@@ -13,10 +13,10 @@ General Information:
 One I/O port
 Modified Harvard Architecture
 4 registers
-	A	arithmetic/flag swap register
-	B	arithmetic/index register
-	C	index register
-	F	flag register
+    A   arithmetic/flag swap register
+    B   arithmetic/index register
+    C   index register
+    F   flag register
 
 Instruction Format:
 {opcode[4:0], cc[2:0]}
@@ -52,25 +52,25 @@ Instruction Assembly        Clock cycles    Description
 #68         STP F           4               F -> prog[C B]
 #6C         STP A           4               A -> prog[C B]
 #70         BR.cc           4               F[cc] ? C B : pc -> pc
-    #70         BR.C			4               F[cc] = carry
-    #71         BR.N			4               F[cc] = negative
-    #72         BR.V			4               F[cc] = overflow
-    #73         BR.NZ			4               F[cc] = not zero
+    #70         BR.C            4               F[cc] = carry
+    #71         BR.N            4               F[cc] = negative
+    #72         BR.V            4               F[cc] = overflow
+    #73         BR.NZ           4               F[cc] = not zero
 #74         BR.cc           4               F[cc] ? C B : pc -> pc
-    #74         BR.H			4               F[cc] = half carry
-    #75         BR.E			4               F[cc] = even parity
-    #76         BR.S			4               F[cc] = right-shift carry
-    #77         BR.T/JMP		4               F[cc] = true
+    #74         BR.H            4               F[cc] = half carry
+    #75         BR.E            4               F[cc] = even parity
+    #76         BR.S            4               F[cc] = right-shift carry
+    #77         BR.T/JMP        4               F[cc] = true
 #78         BR.ncc          4               !F[cc] ? C B : pc -> pc
-    #78         BR.NC			4               F[cc] = no carry
-    #79         BR.P/BR.NN		4               F[cc] = positive
-    #7A         BR.NV			4               F[cc] = no overflow
-    #7B         BR.Z			4               F[cc] = zero
+    #78         BR.NC           4               F[cc] = no carry
+    #79         BR.P/BR.NN      4               F[cc] = positive
+    #7A         BR.NV           4               F[cc] = no overflow
+    #7B         BR.Z            4               F[cc] = zero
 #7C         BR.ncc          4               !F[cc] ? C B : pc -> pc
-    #7C         BR.NH			4               F[cc] = no half carry
-    #7D         BR.D/BR.NE		4               F[cc] = odd parity
-    #7E         BR.NS			4               F[cc] = no right-shift carry
-    #7F         BR.F/NOOP		4               F[cc] = false
+    #7C         BR.NH           4               F[cc] = no half carry
+    #7D         BR.D/BR.NE      4               F[cc] = odd parity
+    #7E         BR.NS           4               F[cc] = no right-shift carry
+    #7F         BR.F/NOOP       4               F[cc] = false
 #80         ALU ? ? F       4               f(A, B) -> F
     #80         CLR F           4               #00 -> F
     #81         SUB B A F       4               B - A -> F
@@ -139,16 +139,16 @@ Instruction Assembly        Clock cycles    Description
 
 Flag Register Contents:
 
-bit		symbol	use
+bit     symbol  use
 ---------------------------
-0		C		Carry - Is set when a carry occurs or a borrow does not occur.
-1		N		Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
-2		V		Overflow - Is set when the sign of the result is not correct.
-3		!Z		Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
-4		H		Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
-5		E		Even Parity - Is set when the parity is even.
-6		S		Right-Shift Carry - Is the lower bit of A before the carry occurred.
-7		T		True - Always high. Is used for jumps and two cycle NOPs. While this flag can be modified with MOV instructions, a BR.cc instruction always reads T as true.
+0       C       Carry - Is set when a carry occurs or a borrow does not occur.
+1       N       Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
+2       V       Overflow - Is set when the sign of the result is not correct.
+3       !Z      Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
+4       H       Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
+5       E       Even Parity - Is set when the parity is even.
+6       S       Right-Shift Carry - Is the lower bit of A before the carry occurred.
+7       T       True - Always high. Is used for jumps and two cycle NOPs. While this flag can be modified with MOV instructions, a BR.cc instruction always reads T as true.
 
 Instructions that affect the flags:
 SHR A
@@ -158,30 +158,30 @@ ALU A/B/C
 Computer Memory Map:
 
 Program memory
-		 _______________
-#0000	|_______________|	Reset/ROM
-#0001	|				|	ROM
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
-		|				|
-#FFFF	|_______________|
+         _______________
+#0000   |_______________|   Reset/ROM
+#0001   |               |   ROM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+#FFFF   |_______________|
 
 Data memory
-		 _______________
-#0000	|				|	RAM
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
-		|				|
-		|_______________|
-#1000	|				|	I/O port
-		|				|
-		|				|
-		~~~~~~~~~~~~~~~~~
-		|				|
+         _______________
+#0000   |               |   RAM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+        |_______________|
+#1000   |               |   I/O port
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
 		|				|
 #FFFF	|_______________|
 

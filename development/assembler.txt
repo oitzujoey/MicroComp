@@ -1,0 +1,26 @@
+Labels need to be used as data.
+Label values need to be resolved after the first pass.
+
+Registers are immediate.
+Labels are deferred.
+Values are deferred because they may rely on labels.
+
+(var value (lambda () …))
+
+A label variable is an object.
+
+(make-instance label-type value (lambda (label message) …))
+
+(label loop) ⇒ (loop (' label))
+I might not do this. I may just treat `label' as a function instead. The beauty of no encapsulation!
+
+(label loop) ⇒ (set-composite-value loop (cons destination (apply list sources)))
+
+(high loop) ⇒ (lambda () (/ (loop)))
+
+(resolve loop) ⇒ (loop)
+
+(var resolve funcall)
+
+
+It is possible to perform arithmetic on labels literally. (lambda () (/ loop 0x100))

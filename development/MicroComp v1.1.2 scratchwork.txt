@@ -1,0 +1,4 @@
+Need to program flash.
+  Need to design and build programmer, ideally using present one.
+Need to add three registers and NOT.
+Need to swap out instruction register for 74HTC574.

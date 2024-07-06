@@ -5,8 +5,12 @@ Attempt #1:
     Chips:
         3x  74*574
         1/6 74*04
+		-1x 74*373
+		1x 74*374
         Total is 4 chips.
 
 It might be a good idea to use microcode output registers that reset to a known state and then use inverters to get the proper polarity. I don't know if this is really needed since shorts should be a problem for a max of one clock cycle. This could actually cause problems with race conditions, but the rest of the design should be made to elimiate those.
 
 I also have a microcode update that I can't program into the flash. I will have to buy or build a programmer.
+
+'374 is used since it is a drop-in replacement for '373.

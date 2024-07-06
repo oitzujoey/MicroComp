@@ -1,0 +1,65 @@
+I broke some flash chips. I thought my only option was EPROMs, but now I'm thinking I can just use RAM. The advantage of this is that I could potentially load the microcode using a microcontroller before boot. It's not age appropriate, but this project never was a 70's computer replica.
+
+p0000:7fff Flash
+p8000:ffff RAM
+d0000:7fff RAM
+d8000:ffff I/O
+
+Microcode should change as little as possible since the more I modify it the more likely I am to cause a short.
+Flash should have a minimal bootloader to load the program from the microcontroller. The first task after the hardware test is to attempt to read the Flash's manufacturer and device IDs. If that works then I should be able to write to flash while executing from RAM.
+
+ROM1 RAM
+ROM2 RAM
+ROM3 RAM
+Flash Flash
+RAM RAM
+I/O '574/244
+
+Now with that hurdle over with, I can dream about the system built around it.
+I can use Sly as the REPL. The API functions can generate code that is sent to the microcontroller.
+
+I wonder if there's enough room for a DL compiler implementation? Or maybe a more traditional lisp would be better?
+
+If the machine runs fast enough I could add segmentation… or I could redesign it from scratch and make it into a PCB.
+
+LPC1769 should fit the requirements as long as its IO is 5V tolerant.
+It should have plenty of space for a small DL VM.
+24-32 bits of data, 16 bits for address, 1 bit for WR. Program RAM can have write disabled so that I don't have to gate the clock. Once I have control over three to four RAMs, I can get to testing.
+
+Perhaps I could get more use out of the MCU's memory if the VM instruction set better matched the processor instruction set?
+
+All words are 8 bits.
+The byte is the only data type.
+
+add a b
+sub a b
+pop a
+push-integer a
+push-index a
+ccall a
+move a b
+equal a b
+return a
+return
+
+bitand
+print-stack
+wait
+assert
+print
+out a b
+in a
+
+Or… since the LPC1769 has a ton of memory, maybe I can compile the raw duckVM to it?
+
+There are 70 digital IO pins. That should work just fine with the ~50 bits I want.
+
+DuckLib is 290k.
+duck-lisp is 1.7M.
+duckLisp-dev is 1.6M.
+
+That's a little large. Hopefully the VM itself is smaller. I can probably cut down on the size of DuckLib if I can remove the memory allocator and replace tries with hash tables. I think the VM could be simplified a ton.
+
+I'm thinking I should finish the language before I continue with this. That way I can get full macros and full the language. Boolean and string operators would be nice.
+
+If I try a DL compiler port to MC, I suppose I could remove lists and replace them with vectors. On the other hand, I could ditch vectors and strings so that fragmentation doesn't cause problems. I could also fix lists and make them doubly linked so that it's possible to push items on the end without traversing the entire list.

@@ -10,6 +10,8 @@ The configuration file will tell the emulator:
 	what program to run on startup
 	what format the program will be in
 	where breakpoints are set
-	the size of memory
-The configuration file format is not case sensitive.
-When a breakpoint is hit, the computer will dump the registers into one file, and the memory into another file.
+	the memory map
+When a breakpoint is hit, the emulator will dump the registers into one file, and the memory into another file.
+The emulator will be able to dump all instructions executed into a file.
+The emulator will treat a specific sequence of instructions as a halt. That sequence of instructions would be an infinite loop on the actual machine.
+The emulator will run no faster than the actual machine. If possible, it will also run no slower.

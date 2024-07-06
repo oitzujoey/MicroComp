@@ -18,14 +18,14 @@ Row 2 (Between Va and Vb symbols)
 74244	IC14	ALU 3-state output
 
 Row 3 (Nearest logo)
-Flash	IC22	Microcode chip 2
-Flash	IC23	Microcode chip 3
-74373	IC43	Instruction register
-74161	IC16	Microprogram counter
+39SF020A		IC22	Microcode chip 2
+W49F002U-12B	IC23	Microcode chip 3
+74373			IC43	Instruction register
+74161			IC16	Microprogram counter
 
 Row 4 (spare BB added on to the side)
 556		Undocumented
-Flash	IC21	Microcode chip 1
+39SF020	IC21	Microcode chip 1
 74374	IC27	Input
 74574	IC31	Output
 74260	IC17	Instruction register load signal (acts as bit 18 of the microcode)
@@ -33,11 +33,11 @@ Flash	IC21	Microcode chip 1
 Pro's Kit BB, top to bottom.
 
 Row 1 (between ground and V2 symbols)
-74244	IC37	PC low 3-state
-Flash	IC24	Program ROM
-74244	IC32	Program bus-data bus transceiver
-SRAM	IC26	Data RAM
-7402	IC28	I/O decode NOR gates
+74244			IC37	PC low 3-state
+M28F101-150P1	IC24	Program ROM
+74244			IC32	Program bus-data bus transceiver
+SRAM			IC26	Data RAM
+7402			IC28	I/O decode NOR gates
 
 Row 2 (Under V1)
 74163	IC33	Program counter low

@@ -899,4 +899,141 @@ Final Instruction Set 1/16/18
 	prog[pc++] -> ir
 	A ^ B -> B
 	
-	
+
+
+Assembler kind of works.
+
+Microcontroller will be connected to the I/O port.
+Microcontroller will be connected to the address, WR, and data of the microcode RAMs.
+
+More than one microcontroller is acceptable. Four AVRs controlled by one master may or may not be since they take up board space. That would also require a fancier VM and possibly more memory.
+Time is not an object.
+
+
+12 address
+1 wr
+24 data
+8 in
+8 out
+1 reset
+1 pcrst
+
+55 IO
+17 pins×3 AVRs
+
+8'(out 8'port 8'data)
+8'(in 8'port)
+
+LPC1769 has 70 IO, but ~5 are not 5 V tolerant.
+512 KiB is more than enough for a simple VM.
+
+Next step: Cleanup VM memory. Get DL running on ARM.
+
+LPC1769 dev board has 54 pins, but it still has a ton of memory.
+
+REPL is running! And I can send small snippets to the MCU to configure registers instead of sending a single massive script!
+`comptime` and `defmacro` allow for a massive library and tiny binaries. I 💙 comptime computing!
+
+IR has an OC pin.
+Μcode has registered outputs with OC.
+Μcode ROM has OE and WE.
+ΜPC does not have OE. This can be fixed with a '125 if I have one. (I probably have a ton)
+
+Five new chips
+Four swapped chips
+
+defer wrp (Not connected because there is no program RAM)
+defer coe (Not connected. Is there no C output buffer?)
+
+
+Assembler can write to file.
+
+Next step: Program Flash with the contents of "fibonacci.bin".
+
+Bytes flashed manually.
+
+Next step: Wire up '125. Wire up microcontroller.
+
+
+MCU has full control over RAMs. The only problems that can occur are with interfacing with the rest of the computer. The µcode output '574s can be put into high Z. Pull-up resistors can be added if necessary. The IR can be put into high Z. The µPC cannot, but it will pass through a '125. The '125 and '374 OEs will be connected together.
+
+
+24 µcode output
+1 µcode oe
+1 µcode we
+1 µcode register oe
+1 µcode address oe
+1 clock
+2 reset
+-------------------
+31 pins
+-------------------
+≤ 12 µcode address
+-------------------
+43 pins
+
+There may be enough pins on the dual-inline pins alone.
+
+'125 wired.
+
+Next step: Wire pull-ups, or wire MCU.
+
+Pull-ups wired.
+
+Next step: Wire MCU.
+
+Port 0 is data[23:0]
+Port 2 is address[~12:0]
+
+Not all pins are 5 V tolerant!
+
+0.15     1 (TXD1) UART Tx
+0.16     1 (RXD1) UART Rx
+0.0:11  12 
+0.17:18  2 
+0.21:26  6 
+0.27:28  2 pull up
+1.0:1    2 
+1.4      1 
+1.8:10   3 
+1.14:17  4 
+1.30:31  2 
+2.0:8    9 
+2.10:13  4 
+0.19:20  2 unpinned
+1.18:29 12 unpinned
+2.9      1 unpinned
+3.25:26  2 unpinned
+4.28:29  2 unpinned
+
+0 22 
+1 12 
+2 11 
+3  0 
+4  0 
+0  2 unpinned
+1 12 unpinned
+2  1 unpinned
+3  2 unpinned
+4  2 unpinned
+
+45
+19
+
+6 IR & 4 µPC = 10 addr
+24 - 3 = 21 data
+31 total
+
+All data and address wires connected. Four control pins remaining.
+
+Everything important connected.
+
+Computer & MCU draw 5V@0.76A.
+
+Shutdown
+    Unplug all USB from PC.
+    Power off STK500.
+    Power off MicroComp.
+
+Extra pins: reset state, reset PC
+Need two extra pins. Round up to three.
