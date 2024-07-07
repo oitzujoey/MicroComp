@@ -182,18 +182,18 @@ Data memory
         |               |
         ~~~~~~~~~~~~~~~~~
         |               |
-		|				|
-#FFFF	|_______________|
+        |               |
+#FFFF   |_______________|
 
 
 Pseudo Instructions:
 
-name			use
-.prog			All code below this line will be put in program memory.
-.data			All code below this line will be put in data memory.
-.addr address	Sets the base address of the instructions that follow.
-.macro name		Tells the assembler that the following code is a macro.
-.endmacro		Tells the assembler that the end of the macro code has been reached.
-.const data		Places a list of data in memory. data can be a comma separated list or a string.
+name            use
+.prog           All code below this line will be put in program memory.
+.data           All code below this line will be put in data memory.
+.addr address   Sets the base address of the instructions that follow.
+.macro name     Tells the assembler that the following code is a macro.
+.endmacro       Tells the assembler that the end of the macro code has been reached.
+.const data     Places a list of data in memory. data can be a comma separated list or a string.
 .ram            Allows the use of labels without actually putting this assembly in the assembled machine code.
 .rom            Begins section that will be written into ROM.
