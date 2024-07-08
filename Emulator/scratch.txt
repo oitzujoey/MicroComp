@@ -1,0 +1,3 @@
+Could be managed by DL.
+
+The core emulator will return no errors. There will be no exceptions. There *will* be IO though, so a memory bank callback could be setup as an exception to catch invalid writes. In fact, there could be a default memory callback that would allow this. Alternatively, there could be a "strict" mode that returns random data when an invalid address is accessed.
