@@ -1,3 +1,99 @@
 Could be managed by DL.
 
 The core emulator will return no errors. There will be no exceptions. There *will* be IO though, so a memory bank callback could be setup as an exception to catch invalid writes. In fact, there could be a default memory callback that would allow this. Alternatively, there could be a "strict" mode that returns random data when an invalid address is accessed.
+
+Ideally I'd now write a port of the duck-lisp VM. That sounds hard though. Maybe I'll do a minimal version instead? Vectors will be lists for example. Strings will be lists of ints. Ints will be 16 bits. I guess the whole problem is how to structure runtime data. Instruction dispatch and arithmetic should be EZ.
+
+typedef struct {
+    union {
+        struct {
+            uint16_t car;
+            uint16_t cdr;
+        } cons;
+        uint32_t integer;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } function;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } machineCode;
+    } value;
+} object_t;
+
+Need a VM instruction that calls machine code.
+
+Need tags.
+
+Function
+Integer
+
+I think I will not have closures or dynamic variables. Everything will be passed as in C.
+
+Function
+Integer
+Pair
+Alist
+
+Objects are 4B aligned… That gives four tag bits per cons in the lowest two address bits.
+If there are only four types, then integers can be 30 bits, functions and machine code can be 16 bits, and conses can be 14,14 bits.
+
+object {
+    data {
+        element: 15;
+        data {
+            data {
+                integer: 14;
+                function: 14;  // Should be OK to align functions along the 4-byte boundary.
+            }: 14;
+            type: 1;
+        }: 15;
+    }: 15;
+    type: 1;
+}: uint16_t;
+
+Cons car: 16'{15'address, 1'b1}
+Cons cdr: 16'{15'address, 1'b1}
+Nil: 16'0
+Integer: 16'{14'value, 2'b00}
+Function: 16'{14'address, 2'b10}
+Machine code function header: 8'{7'(instruction >> 1), 1'0}  // This means machine code functions may only start with even instructions.
+Bytecode function header: 8'{7'instruction, 1'1}
+A list is an array of elements terminated by an integer. The last integer is treated as the last list element.
+
+typedef struct {
+    union {
+        struct {
+            uint16_t car;
+            uint16_t cdr;
+        } cons;
+        uint32_t integer;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } function;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } machineCode;
+    } value;
+} object_t;
+
+Cons: 32'{15'car, 1'nil?, 15'cdr, 1'1}
+  car address: 15'{14'address, 1'1}
+  car integer: 15'{14'integer, 1'0}
+  cdr address: 15'{14'address, 1'1}
+  cdr integer: 15'{14'integer, 1'0}
+Integer: 32'{30'integer, 2'00}
+Composite: 32'{16'address, 13'type, 3'010}
+Subroutine: 32'{16'address, 13'x, 3'110}
+
+Subroutine header (bytecode): 0x00
+Subroutine header (machine): 0x01
+
+(a::Integer + b::Integer)::Integer
+
+I seem to have tapped ACC0, I'm guessing to check for even/odd. I could move it to ACC2 if these dynamic integers are shifted left by 2.
+
+I think if I make another machine I will design it specifically for the interpreted language.

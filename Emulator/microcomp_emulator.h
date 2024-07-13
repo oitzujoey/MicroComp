@@ -10,7 +10,6 @@
 #define DATA_MEMORY_SIZE 65536
 
 typedef struct {
-	bool initialized;
 	uint16_t programCounter;
 	uint8_t microprogramCounter;
 	uint8_t instructionRegister;
@@ -19,9 +18,11 @@ typedef struct {
 	uint8_t a;
 	uint8_t b;
 	uint8_t c;
-	uint8_t program_memory[PROGRAM_MEMORY_SIZE];
-	uint8_t data_memory[DATA_MEMORY_SIZE];
-	uint8_t microcode[MICROCODE_DEPTH][MICROCODE_WIDTH];  // This hopefully gets better cache locality. 🤷
+	void (*program_memory_write)(uint16_t address, uint8_t data);
+	uint8_t (*program_memory_read)(uint16_t address);
+	void (*data_memory_write)(uint16_t address, uint8_t data);
+	uint8_t (*data_memory_read)(uint16_t address);
+	uint8_t microcode[MICROCODE_WIDTH][MICROCODE_DEPTH];
 } microcomp_emulator_state_t;
 
 typedef struct	{
