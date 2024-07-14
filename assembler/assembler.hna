@@ -1,0 +1,197 @@
+(include "/usr/local/share/duck-lisp/library.hna")
+
+(defclass nothing ()
+  make-instance nothing-type nil nil)
+var __nothing (nothing)
+var nothing __nothing
+
+(defmacro def-self-evaluating symbol (L)
+          #(` (var (, symbol) (' (, symbol)))))
+(declare def-self-evaluating (L)
+         (declare-identifier (infer-and-get-next-argument) (quote #I)))
+
+def-self-evaluating data-memory
+def-self-evaluating program-memory
+
+var address-space data-memory
+var program-address 0x0000
+var data-address 0x0000
+var address data-address
+
+
+(defun select-address-space: next-address-space
+  (if = address-space program-memory
+      set program-address address
+      set data-address address)
+  (if = next-address-space program-memory
+      set address program-address
+      set address data-address)
+  set address-space next-address-space
+  nothing)
+
+(defclass label ()
+  make-instance label-type nothing nothing)
+(defun label-source label
+  composite-value label)
+(defun set-label-source (label value)
+  set-composite-value label value)
+(defun / (a b)
+  (when label? a
+        set a label-source a)
+  (when label? b
+    set b label-source b)
+  / a b)
+(defun mod (a b)
+  (when label? a
+        set a label-source a)
+  (when label? b
+        set b label-source b)
+  mod a b)
+
+(defmacro declare-label: name (L)
+          #(` (var (, name) (label))))
+(declare declare-label: (L)
+         (declare-identifier (infer-and-get-next-argument) (quote #L)))
+
+(defun label: label
+  set-label-source label address)
+
+(defun allocate: (name length)
+  label: name)
+
+
+(defclass register (register-id)
+  make-instance register-type register-id nothing)
+
+var f register 0
+var a register 1
+var b register 2
+var c register 3
+
+
+(defun log-error message
+  (println "Error: " message))
+
+
+(defclass byte (value)
+  make-instance byte-type value nothing)
+(defun byte? value
+  (cond integer? value  (if (and < value 0x100
+                                 >= value 0)
+                            true
+                            log-error "Value out of range")
+        byte? value  true
+        closure? value  true
+        false))
+
+
+(defun high value
+  (if (or integer? value
+          label? value)
+      lambda () / value 0x0100
+      log-error "Argument must be an integer or label"))
+
+(defun low value
+  (if (or integer? value
+          label? value)
+      lambda () mod value 0x0100
+      log-error "Argument must be an integer or label"))
+
+
+var instructions nil
+
+(defun push-instruction-bytes (&rest 1 bytes)
+  var bytes-length length bytes
+  push (cons bytes-length bytes) instructions
+  set address  + address bytes-length
+  nothing)
+
+
+;; Instruction set
+
+(defun ldi (constant destination-register)
+  (if byte? constant
+      (if register? destination-register
+          (push-instruction-bytes (+ 0x00 (* 4 (composite-value destination-register)))
+                                  constant)
+          log-error "Second argument must be a register")
+      log-error "First argument must be a byte"))
+
+defun jmp () push-instruction-bytes 0x77
+defun nop () push-instruction-bytes 0xFC
+
+(defun mov (source-register destination-register)
+  (if register? source-register
+      (if register? destination-register
+          (()
+           var source composite-value source-register
+           var destination composite-value destination-register
+           var f composite-value f
+           var a composite-value a
+           var b composite-value b
+           var c composite-value c
+           (if != source destination
+               push-instruction-bytes (switch source
+                                              f (switch destination
+                                                        a 0x10
+                                                        b 0x14
+                                                        c 0x18)
+                                              a (switch destination
+                                                        f 0x1C
+                                                        b 0x20
+                                                        c 0x24)
+                                              b (switch destination
+                                                        f 0x28
+                                                        a 0x2C
+                                                        c 0x30)
+                                              c (switch destination
+                                                        f 0x34
+                                                        a 0x38
+                                                        b 0x3C))
+               log-error "No instruction for moving a register's contents to itself."))
+          log-error "Second argument must be a register")
+      log-error "First argument must be a register"))
+
+(defun add destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x83 (* 8 (composite-value destination-register)))
+      log-error "Argument must be a register"))
+
+(defun stm source-register
+  (if (and register? source-register
+           (or (= (composite-value source-register) (composite-value f))
+               (= (composite-value source-register) (composite-value a))))
+      push-instruction-bytes (+ 0x60 (* 4 (composite-value source-register)))
+      log-error "Argument must be the \"f\" or \"a\" registers"))
+
+
+;; Generate machine code.
+
+(defun print-hex-digit (uint4)
+  (if < uint4 10
+      print uint4
+      print (make-string (vector (- (+ uint4 65) 10)))))
+
+(defun print-hex-uint8 uint8
+  print-hex-digit  / uint8 16
+  print-hex-digit  mod uint8 16)
+
+
+(defun assemble! name
+  ;; Write instructions list into bytecode
+  var bytecode-list nil
+  (dolist element  nreverse instructions
+          (dolist element  cdr element
+                  (when integer? element
+                        push element bytecode-list)
+                  (when closure? element
+                        push (funcall element) bytecode-list)))
+
+  var bytecode make-string nreverse bytecode-list
+  (dolist element bytecode
+          print-hex-uint8 element)
+
+  var binary-file-name (concatenate name ".bin")
+  (println " → " binary-file-name)
+  var binary-file  open-file binary-file-name "w"
+  fwrite binary-file bytecode)

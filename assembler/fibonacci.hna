@@ -1,0 +1,34 @@
+(include "assembler.hna")
+
+;; Data address space is only for creating labels that are used in the program space. No flash file is generated for
+;; data memory
+select-address-space: data-memory
+
+declare-label: io
+declare-label: loop
+
+
+set address 0x8000
+;; Set aside the entire top half of data memory for the single I/O port
+allocate: io 0x8000
+
+select-address-space: program-memory
+
+ldi 1 f
+ldi 0 a
+
+label: loop
+;; Don't bother with loading `b' since all addresses can reach the I/O port
+ldi (high io) c
+
+stm a
+mov f b
+ldi 0 f
+add a
+mov a f
+mov b a
+ldi (high loop) c
+ldi (low loop) b
+jmp
+
+(assemble! "fibonacci")
