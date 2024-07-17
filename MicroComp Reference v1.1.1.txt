@@ -46,7 +46,7 @@ Instruction Assembly        Clock cycles    Description
 #50         LDP F           4               prog[C B] -> F
 #54         LDP A           4               prog[C B] -> A
 #58         LDP B           4               prog[C B] -> B
-#5C         LDP C           4               data[C B] -> C
+#5C         LDP C           4               prog[C B] -> C
 #60         STM F           4               F -> data[C B]
 #64         STM A           4               A -> data[C B]
 #68         STP F           4               F -> prog[C B]

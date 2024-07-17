@@ -27,8 +27,7 @@ ldi 0 f
 add a
 mov a f
 mov b a
-ldi (high loop) c
-ldi (low loop) b
+ldi loop cb
 jmp
 
-(assemble! "fibonacci")
+assemble: "fibonacci"

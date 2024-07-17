@@ -356,15 +356,15 @@ int main(int argc, char *argv[]) {
 	microcomp_emulator_readBinaryFileIntoBuffer8(program_memory, PROGRAM_MEMORY_SIZE, "../../assembler/fibonacci.bin");
 	microcomp_emulator_readMemFileIntoBuffer8(microcomp.microcode[0],
 	                                          MICROCODE_DEPTH,
-	                                          "../../microcode/v1.1.2/microcode-v1.1.2-1.mem");
+	                                          "../../microcode/v1.1.3/microcode-v1.1.3-1.mem");
 	microcomp_emulator_readMemFileIntoBuffer8(microcomp.microcode[1],
 	                                          MICROCODE_DEPTH,
-	                                          "../../microcode/v1.1.2/microcode-v1.1.2-2.mem");
+	                                          "../../microcode/v1.1.3/microcode-v1.1.3-2.mem");
 	microcomp_emulator_readMemFileIntoBuffer8(microcomp.microcode[2],
 	                                          MICROCODE_DEPTH,
-	                                          "../../microcode/v1.1.2/microcode-v1.1.2-3.mem");
+	                                          "../../microcode/v1.1.3/microcode-v1.1.3-3.mem");
 	(void) microcomp_emulator_reset(&microcomp);
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 250; i++) {
 		(void) microcomp_emulator_step(&microcomp);
 		/* (void) microcomp_emulator_printSimpleState(&microcomp); */
 	}

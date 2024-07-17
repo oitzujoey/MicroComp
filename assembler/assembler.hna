@@ -1,14 +1,25 @@
 (include "/usr/local/share/duck-lisp/library.hna")
 
+;; Data memory has no ROM.
+
 (defclass nothing ()
   make-instance nothing-type nil nil)
-var __nothing (nothing)
-var nothing __nothing
+var _nothing (nothing)
+var nothing _nothing
 
 (defmacro def-self-evaluating symbol (L)
           #(` (var (, symbol) (' (, symbol)))))
 (declare def-self-evaluating (L)
          (declare-identifier (infer-and-get-next-argument) (quote #I)))
+
+(defclass thunk function
+  make-instance thunk-type () function)
+defun _thunk function  thunk function
+(defmacro thunk (&rest body) (&rest 1 I)
+          ` _thunk (lambda () ,@ body))
+
+(defun log-error message
+  (println "Error: " message))
 
 def-self-evaluating data-memory
 def-self-evaluating program-memory
@@ -29,17 +40,19 @@ var address data-address
   set address-space next-address-space
   nothing)
 
+(defun address: next-address
+  set address next-address)
+
+
 (defclass label ()
   make-instance label-type nothing nothing)
-(defun label-source label
-  composite-value label)
-(defun set-label-source (label value)
-  set-composite-value label value)
+defun label-source label  composite-value label
+defun set-label-source (label value)  set-composite-value label value
 (defun / (a b)
   (when label? a
         set a label-source a)
   (when label? b
-    set b label-source b)
+        set b label-source b)
   / a b)
 (defun mod (a b)
   (when label? a
@@ -53,48 +66,76 @@ var address data-address
 (declare declare-label: (L)
          (declare-identifier (infer-and-get-next-argument) (quote #L)))
 
-(defun label: label
-  set-label-source label address)
+defun label: label  set-label-source label address
+
 
 (defun allocate: (name length)
-  label: name)
+  label: name
+  set address  + address length)
+
+;; Need to generate a full 64KiB program ROM file for this.
+(defun allocate-address: (name address-to-store)
+  (when = address-space data-memory
+        log-error "\"allocate-address:\" only works properly when used on data memory")
+  label: name
+  set address  + address 2)
+
+;; Need to generate a full 64KiB program ROM file for this.
+(defun allocate-string: (name string)
+  (when = address-space data-memory
+        log-error "\"allocate-string:\" only works properly when used on data memory")
+  label: name
+  set address  + address (length string))
 
 
-(defclass register (register-id)
+(defclass register register-id
   make-instance register-type register-id nothing)
+defun register-id register  composite-value register
+(defun = (a b)
+  (if (and register? a
+           register? b)
+      (= register-id a
+         register-id b)
+      = a b))
 
 var f register 0
 var a register 1
 var b register 2
 var c register 3
+def-self-evaluating cb
 
 
-(defun log-error message
-  (println "Error: " message))
-
-
-(defclass byte (value)
+(defclass byte value
   make-instance byte-type value nothing)
 (defun byte? value
   (cond integer? value  (if (and < value 0x100
                                  >= value 0)
                             true
-                            log-error "Value out of range")
+                            log-error "Byte value out of range")
         byte? value  true
-        closure? value  true
+        thunk? value  true  ; A lie, I suppose.
+        false))
+
+(defun address? value
+  (cond integer? value  (if (and < value 0x10000
+                                 >= value 0)
+                            true
+                            log-error "Address value out of range")
+        label? value  true
+        thunk? value  true              ; A lie, I suppose.
         false))
 
 
 (defun high value
   (if (or integer? value
           label? value)
-      lambda () / value 0x0100
+      thunk  / value 0x0100
       log-error "Argument must be an integer or label"))
 
 (defun low value
   (if (or integer? value
           label? value)
-      lambda () mod value 0x0100
+      thunk  mod value 0x0100
       log-error "Argument must be an integer or label"))
 
 
@@ -110,26 +151,27 @@ var instructions nil
 ;; Instruction set
 
 (defun ldi (constant destination-register)
-  (if byte? constant
-      (if register? destination-register
-          (push-instruction-bytes (+ 0x00 (* 4 (composite-value destination-register)))
-                                  constant)
-          log-error "Second argument must be a register")
-      log-error "First argument must be a byte"))
-
-defun jmp () push-instruction-bytes 0x77
-defun nop () push-instruction-bytes 0xFC
+  (if = cb destination-register
+      (if address? constant
+          (push-instruction-bytes 0xF0 (mod constant 0x100) (/ constant 0x100))
+          log-error "First argument must be an address")
+      (if byte? constant
+          (if register? destination-register
+              (push-instruction-bytes (+ 0x00 (* 4 (register-id destination-register)))
+                                      constant)
+              log-error "Second argument must be a register")
+          log-error "First argument must be a byte")))
 
 (defun mov (source-register destination-register)
   (if register? source-register
       (if register? destination-register
           (()
-           var source composite-value source-register
-           var destination composite-value destination-register
-           var f composite-value f
-           var a composite-value a
-           var b composite-value b
-           var c composite-value c
+           var source register-id source-register
+           var destination register-id destination-register
+           var f register-id f
+           var a register-id a
+           var b register-id b
+           var c register-id c
            (if != source destination
                push-instruction-bytes (switch source
                                               f (switch destination
@@ -148,21 +190,104 @@ defun nop () push-instruction-bytes 0xFC
                                                         f 0x34
                                                         a 0x38
                                                         b 0x3C))
-               log-error "No instruction for moving a register's contents to itself."))
+               log-error "No instruction for moving a register's contents to itself"))
           log-error "Second argument must be a register")
       log-error "First argument must be a register"))
 
-(defun add destination-register
+(defun ldm destination-register
   (if register? destination-register
-      push-instruction-bytes (+ 0x83 (* 8 (composite-value destination-register)))
+      push-instruction-bytes (+ 0x40 (* 4 (register-id destination-register)))
+      log-error "Argument must be a register"))
+
+(defun ldp destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x50 (* 4 (register-id destination-register)))
       log-error "Argument must be a register"))
 
 (defun stm source-register
   (if (and register? source-register
-           (or (= (composite-value source-register) (composite-value f))
-               (= (composite-value source-register) (composite-value a))))
-      push-instruction-bytes (+ 0x60 (* 4 (composite-value source-register)))
+           (or = source-register f
+               = source-register a))
+      push-instruction-bytes (+ 0x60 (* 4 (register-id source-register)))
       log-error "Argument must be the \"f\" or \"a\" registers"))
+
+(defun stp source-register
+  (if (and register? source-register
+           (or = source-register f
+               = source-register a))
+      push-instruction-bytes (+ 0x68 (* 4 (register-id source-register)))
+      log-error "Argument must be the \"f\" or \"a\" registers"))
+
+defun br.c () push-instruction-bytes 0x70
+defun br.n () push-instruction-bytes 0x71
+defun br.v () push-instruction-bytes 0x72
+defun br.nz () push-instruction-bytes 0x73
+defun br.hc () push-instruction-bytes 0x74
+defun br.ep () push-instruction-bytes 0x75
+defun br.sc () push-instruction-bytes 0x76
+defun br.t () push-instruction-bytes 0x77
+defun jmp () push-instruction-bytes 0x77
+defun br.nc () push-instruction-bytes 0x78
+defun br.p () push-instruction-bytes 0x79
+defun br.nn () push-instruction-bytes 0x79
+defun br.nv () push-instruction-bytes 0x7A
+defun br.z () push-instruction-bytes 0x7B
+defun br.nhc () push-instruction-bytes 0x7C
+defun br.op () push-instruction-bytes 0x7D
+defun br.nep () push-instruction-bytes 0x7D
+defun br.nsc () push-instruction-bytes 0x7E
+defun br.f () push-instruction-bytes 0x7F
+defun noop () push-instruction-bytes 0x7F
+
+(defun clr register
+  (if register? register
+      push-instruction-bytes (+ 0x80 (* 8 (register-id register)))
+      log-error "Argument must be a register"))
+
+(defun sub (source-register-1 source-register-2 destination-register)
+  (cond (and = source-register-1 b
+             = source-register-2 a)
+        (if register? destination-register
+            push-instruction-bytes (+ 0x81 (* 8 (register-id destination-register)))
+            log-error "Last argument must be a register")
+        (and = source-register-1 a
+             = source-register-2 b)
+        (if register? destination-register
+            push-instruction-bytes (+ 0x82 (* 8 (register-id destination-register)))
+            log-error "Last argument must be a register")
+        log-error "First two arguments must be \"a\" or \"b\" registers"))
+
+(defun add destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x83 (* 8 (register-id destination-register)))
+      log-error "Argument must be a register"))
+
+(defun xor destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x84 (* 8 (register-id destination-register)))
+      log-error "Argument must be a register"))
+
+(defun or destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x85 (* 8 (register-id destination-register)))
+      log-error "Argument must be a register"))
+
+(defun and destination-register
+  (if register? destination-register
+      push-instruction-bytes (+ 0x86 (* 8 (register-id destination-register)))
+      log-error "Argument must be a register"))
+
+(defun set-bits register
+  (if register? register
+      push-instruction-bytes (+ 0x87 (* 8 (register-id register)))
+      log-error "Argument must be a register"))
+
+(defun shr register
+  (if = register a
+      push-instruction-bytes 0xF4
+      log-error "Argument must be register \"a\""))
+
+defun nop () push-instruction-bytes 0xFC
 
 
 ;; Generate machine code.
@@ -177,14 +302,14 @@ defun nop () push-instruction-bytes 0xFC
   print-hex-digit  mod uint8 16)
 
 
-(defun assemble! name
+(defun assemble: name
   ;; Write instructions list into bytecode
   var bytecode-list nil
   (dolist element  nreverse instructions
           (dolist element  cdr element
                   (when integer? element
                         push element bytecode-list)
-                  (when closure? element
+                  (when thunk? element
                         push (funcall element) bytecode-list)))
 
   var bytecode make-string nreverse bytecode-list
