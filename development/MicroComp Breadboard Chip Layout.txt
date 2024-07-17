@@ -33,7 +33,7 @@ Row 4 (spare BB added on to the side)
 Pro's Kit BB, top to bottom.
 
 Row 1 (between ground and V2 symbols)
-74244			IC37	PC low 3-state
+74244			IC37	Program counter low 3-state
 M28F101-150P1	IC24	Program ROM
 74244			IC32	Program bus-data bus transceiver
 SRAM			IC26	Data RAM
