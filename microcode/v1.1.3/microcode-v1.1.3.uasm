@@ -213,12 +213,12 @@ FILL upcrst rdp pcoe
 0x20;       ALU ? ? F       4               f(A, B) -> F
     rdp pcoe
     rdp pcoe pcck
-    fsors aluoe
+    aluoe
     aluoe fclk upcrst
 0x21;       ALU ? ? F       4               f(A, B) -> F
     rdp pcoe
     rdp pcoe pcck
-    fsors aluoe
+    aluoe
     aluoe fclk upcrst
 0x22;       ALU ? ? A       4               f(A, B) -> A
     rdp pcoe
