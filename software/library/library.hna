@@ -1,0 +1,106 @@
+select-address-space: data-memory
+
+declare-label: link-address
+allocate-address: link-address undefined
+
+var flags-carry-mask 0x01
+var flags-negative-mask 0x02
+var flags-overflow-mask 0x04
+var flags-not-zero-mask 0x08
+var flags-half-carry-mask 0x10
+var flags-even-parity-mask 0x20
+var flags-right-shift-carry-mask 0x40
+var flags-true-mask 0x80
+
+(defun zero register
+  (if = cb register
+      (()
+       clr b
+       clr c)
+      clr register)
+  ())
+
+(defun ldma (address register)
+  ldi address cb
+  ldm register)
+
+(defun stmi (literal-address destination-address)
+  ldi (low literal-address) a
+  ldi destination-address cb
+  stm a
+
+  ldi (high literal-address) a
+  ldi (1+ destination-address) cb
+  stm a)
+
+(defun load-address-cb address
+  ldi address cb
+  ldm a
+  ldi (1+ address) cb
+  ldm c
+  mov a b)
+
+(defun copy-address (source-address destination-address)
+  ldi source-address cb
+  ldm a
+  ldi destination-address cb
+  stm a
+  ldi (1+ source-address) cb
+  ldm a
+  ldi (1+ destination-address) cb
+  stm a)
+
+(defun copy-byte (source-address destination-address)
+  ldi source-address cb
+  ldm a
+  ldi destination-address cb
+  stm a)
+
+;; Flags
+(defun increment-address address
+  zero f  ; Clear carry
+
+  ldma address a
+  ldi 1 b  ; Increment
+  add a
+  ldi (low address) b
+  stm a
+
+  ldma (1+ address) a
+  zero b  ; Carry
+  add a
+  ldi (low 1+ address) b
+  stm a)
+
+(defun if-address-!= (address-a address-b target)
+  ldma address-a a
+  ldma address-b b
+  zero f
+  sub a b a
+  ldi target cb
+  br.nz  ; Early continue.
+  ldma (1+ address-a) a
+  ldma (1+ address-b) b
+  zero f
+  sub a b a
+  ldi target cb
+  br.nz  ; Late continue.
+  )
+
+
+(defun leaf-call subroutine-label
+  ;; Bwahaha! Dynamically generated labels!
+  var continue (label)
+  declare-label: continue
+  stmi continue link-address
+  ldi subroutine-label cb
+  jmp
+  label: continue)
+
+(defun return-from-leaf ()
+  load-address-cb link-address
+  jmp)
+
+(defun jmpi address
+  ldi address cb
+  jmp)

@@ -1,0 +1,263 @@
+Ideally I'd now write a port of the duck-lisp VM. That sounds hard though. Maybe I'll do a minimal version instead? Vectors will be lists for example. Strings will be lists of ints. Ints will be 16 bits. I guess the whole problem is how to structure runtime data. Instruction dispatch and arithmetic should be EZ.
+
+typedef struct {
+    union {
+        struct {
+            uint16_t car;
+            uint16_t cdr;
+        } cons;
+        uint32_t integer;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } function;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } machineCode;
+    } value;
+} object_t;
+
+Need a VM instruction that calls machine code.
+
+Need tags.
+
+Function
+Integer
+
+I think I will not have closures or dynamic variables. Everything will be passed as in C.
+
+Function
+Integer
+Pair
+Alist
+
+Objects are 4B aligned… That gives four tag bits per cons in the lowest two address bits.
+If there are only four types, then integers can be 30 bits, functions and machine code can be 16 bits, and conses can be 14,14 bits.
+
+object {
+    data {
+        element: 15;
+        data {
+            data {
+                integer: 14;
+                function: 14;  // Should be OK to align functions along the 4-byte boundary.
+            }: 14;
+            type: 1;
+        }: 15;
+    }: 15;
+    type: 1;
+}: uint16_t;
+
+Cons car: 16'{15'address, 1'b1}
+Cons cdr: 16'{15'address, 1'b1}
+Nil: 16'0
+Integer: 16'{14'value, 2'b00}
+Function: 16'{14'address, 2'b10}
+Machine code function header: 8'{7'(instruction >> 1), 1'0}  // This means machine code functions may only start with even instructions.
+Bytecode function header: 8'{7'instruction, 1'1}
+A list is an array of elements terminated by an integer. The last integer is treated as the last list element.
+
+typedef struct {
+    union {
+        struct {
+            uint16_t car;
+            uint16_t cdr;
+        } cons;
+        uint32_t integer;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } function;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } machineCode;
+    } value;
+} object_t;
+
+Cons: 32'{15'car, 1'nil?, 15'cdr, 1'1}
+  car address: 15'{14'address, 1'1}
+  car integer: 15'{14'integer, 1'0}
+  cdr address: 15'{14'address, 1'1}
+  cdr integer: 15'{14'integer, 1'0}
+Integer: 32'{30'integer, 2'00}
+Composite: 32'{16'address, 12'type, 4'0010}
+Bytecode subroutine: 32'{16'address, 11'x, 5'00110}
+Native subroutine: 32'{16'address, 11'x, 5'01110}
+Nil: 32'{28'x, 5'10110}
+
+Subroutine header (bytecode): 0x00
+Subroutine header (machine): 0x01
+
+(a::Integer + b::Integer)::Integer
+
+I seem to have tapped ACC0, I'm guessing to check for even/odd. I could move it to ACC2 if these dynamic integers are shifted left by 2.
+
+I think if I make another machine I will design it specifically for the interpreted language. Have it support stacks if possible, have an easy way to implement nested function calls, and maybe even only give it enough program address space to run a stack-based bytecode VM. Even the bootloader could be written in bytecode.
+
+
+The monitor needs to be written first I think. That way I can load bytecode onto it.
+
+
+Dispatch will be done with preprocessing then a jump table. Parse 0, 1, or 2 arguments of size 8 or 16, then dispatch.
+1 bit for argument size.
+2 bits for number of arguments.
+
+
+Parsing bits is surprisingly quick. I can load the byte into A and then leave it as I test each combination of bits and store the result to memory.
+
+
+The primary dispatch table can be automatically placed on the next program memory page. This leaves an empty region of program memory open though.
+There's a bunch of memory blocks I need to keep straight. I've got a bunch of random variables, I've got a stack, I've got a heap, I've got I/O. Boy oh boy. The stack can grow down from the top of RAM, as is tradition. The heap can start just after the variables. I don't think that would cause a problem.
+The dispatch table is generated from a CSV file. The code that generates the table must declare all labels at the top of the file and then do `allocate-address:' for each opcode.
+
+
+How to compare A against an opcode:
+ldi 0 f
+ldi potential-opcode b
+sub a b b
+ldi opcode-code-address cb
+br.z
+This is 9 bytes. An address table would take up a whole lot less space than if I have to do this for all 64 opcodes.
+9*64 = 0x240
+64*2 = 0x80 + generalized dispatch
+This isn't a competition.
+This causes another problem though. I've got 64 individual instructions, but a max of 32 opcodes. It would be nice to find a way to store the 32 opcodes and three arg lengths in six bits. That's 7 bits I'd like to pack into 6.
+3*64 (0xC0) would be enough for 32 instructions per length. 256 would be enough for 7 bits (* 2 (expt 2 7)). Actually if I don't use args with a length of three, then the tables have the same size from a practical standpoint. So 2*3*32 it is.
+
+(0x7F & opcode)<<2
+ldi opcode cb
+ldm a
+ldi opcode-arg-length cb
+ldm b
+or a
+mov a b
+ldi 0 f
+add b
+ldi (high jump-table-base-address) c
+ldm f
+ldi 1 a  ; The address is even, so we can add by ORing. The advantage of this is that OR ignores carry in.
+or b  ; Actually, this doesn't work because carry out is not ignored. F will be overwritten.
+ldm a
+ldi jump-table-target cb
+stm f
+ldi (1+ jump-table-target) cb
+stm a
+
+
+;; Type 0
+
+;; 8, 16
+jump relative-label
+
+;; 0, 1, 8, 16, 30
+push-integer integer
+
+;; 8, 16
+br.c relative-label pops  ; This and most below branch if condition (cc that is represented by an integer on top of stack) is met.
+br.n relative-label pops
+br.v relative-label pops
+br.nz relative-label pops
+br.hc relative-label pops
+br.ep relative-label pops
+br.sc relative-label pops
+br.nc relative-label pops
+br.p relative-label pops
+br.nv relative-label pops
+br.z relative-label pops
+br.nhc relative-label pops
+br.op relative-label pops
+br.nsc relative-label pops
+brnz relative-label pops  ; Branches if top value truthy.
+
+push-nil
+pop
+nop  ; Subroutine
+halt  ; Subroutine
+garbage-collect  ; Subroutine
+
+;; 16
+push-bytecode-subroutine subroutine-address
+push-native-subroutine subroutine-address
+call-program label
+call-data label
+
+;; Type 1
+
+;; 8, 16; 1 arg
+cons? object
+nil? object
+integer? object
+composite? object
+subroutine? object
+car cons
+cdr cons
+composite-value composite
+type-of value
+return pops
+push-from-index index
+copy-to-index index
+pop-multiple pops
+clear integer
+preset integer-a
+not integer-a
+shift-right integer-a
+peek-byte address
+peek-address address
+poke-byte address
+poke-address address
+
+;; Type 2
+
+;; 8, 16; 2 arg
+push-cons car cdr
+set-car cons car
+set-cdr cons cdr
+push-composite type value
+set-composite-value composite value
+subtract-b-a integer-a integer-b
+subtract-a-b integer-a integer-b
+add integer-a integer-b
+xor integer-a integer-b
+or integer-a integer-b
+and integer-a integer-b
+multiply integer-a integer-b
+divide integer-a integer-b
+equal integer-a integer-b
+less integer-a integer-b
+greater integer-a integer-b
+cmp integer-a integer-b  ; Pushes flags as an integer
+
+
+
+
+Fibonacci:
+integer.0
+integer.1
+integer.0
+integer.0
+jump.8 32
+push-from-index.8 0x04
+call-program print
+pop.1
+add.8 0x04 0x03
+copy-to-index.8 0x03
+pop.1
+push-from-index.8 0x04
+copy-to-index.8 0x04
+pop.1
+push-from-index.8 0x02
+copy-to-index.8 0x05
+pop.1
+integer.1
+add.8 0x02 0x01
+copy-to-index.8 0x03
+copy-to-index.8 0x02
+pop.8 0x02
+integer.8 0x0A
+less.8 0x02 0x01
+brnz.8 0xD9 0x02
+copy-to-index.8 0x01 0x04
+pop.8 0x03
+halt

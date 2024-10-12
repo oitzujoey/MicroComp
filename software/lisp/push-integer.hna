@@ -1,0 +1,87 @@
+(()
+ label: instruction-push-integer.0
+ out-byte car "P"
+ out-byte car "I"
+ out-byte car "0"
+ jmpi dispatch
+
+ label: instruction-push-integer.1
+ out-byte car "P"
+ out-byte car "I"
+ out-byte car "1"
+ jmpi dispatch
+
+ (()
+  declare-label: push-integer.8
+  declare-label: push-integer.16
+  declare-label: push-integer.30
+
+  label: instruction-push-integer.8
+  out-byte car "P"
+  out-byte car "I"
+  out-byte car "8"
+  zero a
+  ldi (1+ operand1) cb
+  stm a
+  ldi (2+ operand1) cb
+  stm a
+  ldi (3+ operand1) cb
+  stm a
+  jmpi push-integer.8
+
+
+
+  ldi pop-stack-link cb
+  ldi low return a
+  stm a
+  ldi (1+ pop-stack-link) cb
+  ldi high return a
+  stm a
+  ldi pop-stack cb
+  jmp
+  label: return
+
+
+
+  zero f
+
+  ldi stack cb
+  ldm a
+  ldi 1 b
+  sub a b a
+  ldi (low stack) b
+  stm a
+
+  ldi (1+ stack) cb
+  ldm a
+  ldi 0 b
+  sub a b a
+  ldi (low 1+ stack) b
+  stm a
+
+
+
+  label: instruction-push-integer.16
+  out-byte car "P"
+  out-byte car "I"
+  out-byte car "6"
+  zero a
+  ldi (2+ operand1) cb
+  stm a
+  ldi (3+ operand1) cb
+  stm a
+  jmpi push-integer.16
+
+
+  label: instruction-push-integer.30
+  out-byte car "P"
+  out-byte car "I"
+  out-byte car "3"
+  jmpi push-integer.30
+
+
+  label: push-integer.8
+  label: push-integer.16
+  label: push-integer.30
+  ;; Grab 2 bytes
+  jmpi dispatch))

@@ -1,0 +1,86 @@
+(include "../../assembler/assembler.hna")
+
+;; Data address space is only for creating labels that are used in the program space. No flash file is generated for
+;; data memory
+select-address-space: data-memory
+;; Address of string is stored at address 0x0000.
+declare-label: hello-string-address
+
+allocate-address: hello-string-address undefined
+;; Set aside the entire top half of data memory for the single I/O port
+declare-label: io
+address: 0x8000
+allocate: io 0x8000
+
+select-address-space: program-memory
+
+declare-label: hello-string
+declare-label: hello-string-end
+
+
+declare-label: start
+label: start
+declare-label: restart
+label: restart
+
+;; Reset string pointer to beginning of string.
+ldi (low hello-string) a
+ldi hello-string-address cb
+stm a
+ldi (high hello-string) a
+ldi (1+ hello-string-address) cb
+stm a
+
+declare-label: loop
+label: loop
+
+;; Send character to IO port.
+ldi hello-string-address cb
+ldm a
+ldi (1+ hello-string-address) cb
+ldm c
+mov a b
+ldp a
+ldi io cb
+stm a
+
+;; Increment string address.
+ldi hello-string-address cb
+ldm a
+ldi 1 b
+ldi 0 f
+add a
+ldi (low hello-string-address) b
+stm a
+ldi (1+ hello-string-address) cb
+ldm a
+ldi 0 b
+add a
+ldi (low 1+ hello-string-address) cb
+stm a
+
+;; Check if at end of string.
+ldi hello-string-address cb
+ldm a
+ldi (low hello-string-end) b
+ldi 0 f
+sub a b a
+ldi loop cb
+br.nz  ; Early continue.
+ldi (1+ hello-string-address) cb
+ldm a
+ldi (high hello-string-end) b
+ldi 0 f
+sub a b a
+ldi loop cb
+br.nz  ; Late continue.
+;; Default: restart program.
+ldi restart cb
+jmp
+
+
+allocate-string: hello-string "Hello, world!\n"
+label: hello-string-end
+
+
+assemble: "hello-world"

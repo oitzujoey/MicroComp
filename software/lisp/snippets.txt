@@ -1,0 +1,44 @@
+typedef struct {
+    union {
+        struct {
+            uint16_t car;
+            uint16_t cdr;
+        } cons;
+        uint32_t integer;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } function;
+        struct {
+            uint16_t address;
+            uint16_t padding;
+        } machineCode;
+    } value;
+} object_t;
+
+Cons: 32'{15'car, 1'nil?, 15'cdr, 1'1}
+  car address: 15'{14'address, 1'1}
+  car integer: 15'{14'integer, 1'0}
+  cdr address: 15'{14'address, 1'1}
+  cdr integer: 15'{14'integer, 1'0}
+Integer: 32'{30'integer, 2'00}
+Composite: 32'{16'address, 13'type, 3'010}
+Subroutine: 32'{16'address, 13'x, 3'110}
+
+Subroutine header (bytecode): 0x00
+Subroutine header (machine): 0x01
+
+
+label increment
+
+(defun return ()
+  ldi (high stack-high) c
+  ldi (low stack-high) b
+  ldm a
+  ldi (high stack-low) c
+  ldi (low stack-low) b
+  ldm b
+  mov a c
+  jmp)
+
+return

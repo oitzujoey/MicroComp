@@ -1,0 +1,307 @@
+;; Entry requires `bytecode-address' to be set to the address of the bytecode array.
+
+(()
+ select-address-space: data-memory
+ declare-label: instruction-pointer  allocate-address: instruction-pointer undefined
+ declare-label: stack-pointer  allocate-address: stack-pointer undefined
+
+ declare-label: opcode-dispatch  allocate-byte: opcode-dispatch undefined
+ var opcode-dispatch-mask 0x7F
+ declare-label: opcode-arg-size  allocate-byte: opcode-arg-size undefined
+ var opcode-arg-size-mask 0x80
+ declare-label: opcode-args-length  allocate-byte: opcode-args-length undefined
+ var opcode-args-length-mask 0x60
+ declare-label: operand1  allocate: operand1 4  ; 4, because of push-integer
+ declare-label: operand2  allocate: operand2 2
+ declare-label: arg1  allocate: arg1 4
+ declare-label: arg2  allocate: arg2 4
+ declare-label: return-value  allocate: return-value 4
+
+ declare-label: instruction-invalid
+ declare-label: instruction-br.c
+ declare-label: instruction-br.n
+ declare-label: instruction-br.v
+ declare-label: instruction-br.nz
+ declare-label: instruction-br.hc
+ declare-label: instruction-br.ep
+ declare-label: instruction-br.sc
+ declare-label: instruction-jump
+ declare-label: instruction-br.nc
+ declare-label: instruction-br.p
+ declare-label: instruction-br.nv
+ declare-label: instruction-br.z
+ declare-label: instruction-br.nhc
+ declare-label: instruction-br.op
+ declare-label: instruction-br.nsc
+ declare-label: instruction-brnz
+ declare-label: instruction-push-integer.0
+ declare-label: instruction-push-integer.1
+ declare-label: instruction-push-integer.8
+ declare-label: instruction-push-integer.16
+ declare-label: instruction-push-integer.30
+ declare-label: instruction-push-nil
+ declare-label: instruction-pop
+ declare-label: instruction-nop
+ declare-label: instruction-halt
+ declare-label: instruction-garbage-collect
+ declare-label: instruction-push-bytecode-subroutine
+ declare-label: instruction-push-native-subroutine
+ declare-label: instruction-call-program
+ declare-label: instruction-call-data
+ declare-label: instruction-cons?
+ declare-label: instruction-nil?
+ declare-label: instruction-integer?
+ declare-label: instruction-composite?
+ declare-label: instruction-subroutine?
+ declare-label: instruction-car
+ declare-label: instruction-cdr
+ declare-label: instruction-composite-value
+ declare-label: instruction-type-of
+ declare-label: instruction-return
+ declare-label: instruction-push-from-index
+ declare-label: instruction-copy-to-index
+ declare-label: instruction-pop-multiple
+ declare-label: instruction-clear
+ declare-label: instruction-preset
+ declare-label: instruction-not
+ declare-label: instruction-shift-right
+ declare-label: instruction-peek-byte
+ declare-label: instruction-peek-address
+ declare-label: instruction-poke-byte
+ declare-label: instruction-poke-address
+ declare-label: instruction-push-cons
+ declare-label: instruction-set-car
+ declare-label: instruction-set-cdr
+ declare-label: instruction-push-composite
+ declare-label: instruction-set-composite-value
+ declare-label: instruction-subtract-b-a
+ declare-label: instruction-subtract-a-b
+ declare-label: instruction-add
+ declare-label: instruction-xor
+ declare-label: instruction-or
+ declare-label: instruction-and
+ declare-label: instruction-multiply
+ declare-label: instruction-divide
+ declare-label: instruction-equal
+ declare-label: instruction-less
+ declare-label: instruction-greater
+ declare-label: instruction-cmp
+
+
+
+ select-address-space: program-memory
+ ;; Set the program counter.
+ copy-address bytecode-address instruction-pointer
+ ;; Reset the stack.
+ ldi stack-pointer cb
+ pre a
+ stm a
+ ldi (1+ stack-pointer) cb
+ ldi 0x7f a
+ stm a
+
+
+ ;; Main VM loop
+ declare-label: halt
+ define-label: dispatch
+ declare-label: push-result
+ declare-label: dispatch-table
+
+ out-byte car "$"
+
+ ;; Fetch opcode.
+ load-address-cb instruction-pointer
+ ldp a
+ out
+ ;; Decode size.
+ ldi opcode-arg-size-mask b
+ and f
+ ldi opcode-arg-size cb
+ stm f
+ ;; Decode number-of-args.
+ ldi opcode-args-length-mask b
+ and f
+ ldi opcode-args-length cb
+ stm f
+ ;; Save dispatch field.
+ ldi opcode-dispatch-mask b
+ and a
+ mov a b  ; Double so we can use this as the dispatch table index.
+ zero f
+ add a
+ ldi opcode-dispatch cb
+ stm a
+
+ increment-address instruction-pointer
+
+ ;; Pop specified number arguments off of stack
+ declare-label: skip-arg-decode
+ ;; Skip if no arguments.
+ ldma opcode-args-length a
+ zero f
+ zero b
+ sub a b b
+ ldi skip-arg-decode cb
+ br.z
+
+ ;; Fetch first argument.
+ ;; TODO
+
+ ;; Pop first argument.
+ ;; TODO
+
+ ;; Skip if one argument.
+ ldma opcode-args-length a
+ zero f
+ ldi 0x20 b  ; Code for 1 argument
+ sub a b b
+ ldi skip-arg-decode cb
+ br.z
+
+ ;; Fetch second argument.
+ ;; TODO
+
+ ;; Pop second argument.
+ ;; TODO
+
+ label: skip-arg-decode
+
+ ;; Dispatch operation using jump table.
+ ldi opcode-dispatch cb
+ ldm a
+ ldi 1 b  ; The address is even, so we can add by ORing. The advantage of this is that OR ignores carry in.
+ or a
+ ldi (low opcode-dispatch) b
+ ldm b
+ ldi (high dispatch-table) c
+ ldp f
+ mov a b
+ ldp c
+ mov f b
+ jmp
+
+
+ label: push-result
+ ;; Push `return-value' on stack. Only some instructions call this routine.
+ ;; TODO
+ jmpi dispatch
+
+
+ label: instruction-invalid
+ out-byte car "#"
+
+ label: halt
+ out-byte car "!"
+ return-from-leaf
+
+
+ (include "push-integer.hna")
+ (include "jump.hna")
+ (include "push-from-index.hna")
+
+ ;; Dispatch table must start on the 256 B page boundary.
+ (()
+  var start-address address
+  (while (!= 0 (mod address 0x100))
+    ;; Use 0xFF to avoid programming what we don't need to. Probably doesn't matter at all.
+    push-instruction-bytes 0xff)
+  (println "Allocating dispatch table at " address ", wasting " (- address start-address) " B of space."))
+
+ label: dispatch-table
+ (push-instruction-addresses instruction-br.c
+                             instruction-br.n
+                             instruction-br.v
+                             instruction-br.nz
+                             instruction-br.hc
+                             instruction-br.ep
+                             instruction-br.sc
+                             instruction-jump
+                             instruction-br.nc
+                             instruction-br.p
+                             instruction-br.nv
+                             instruction-br.z
+                             instruction-br.nhc
+                             instruction-br.op
+                             instruction-br.nsc
+                             instruction-brnz
+                             instruction-push-integer.0
+                             instruction-push-integer.1
+                             instruction-push-integer.8
+                             instruction-push-integer.16
+                             instruction-push-integer.30
+                             instruction-push-nil
+                             instruction-pop
+                             instruction-nop
+                             instruction-halt
+                             instruction-garbage-collect
+                             instruction-push-bytecode-subroutine
+                             instruction-push-native-subroutine
+                             instruction-call-program
+                             instruction-call-data
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-cons?
+                             instruction-nil?
+                             instruction-integer?
+                             instruction-composite?
+                             instruction-subroutine?
+                             instruction-car
+                             instruction-cdr
+                             instruction-composite-value
+                             instruction-type-of
+                             instruction-return
+                             instruction-push-from-index
+                             instruction-copy-to-index
+                             instruction-pop-multiple
+                             instruction-clear
+                             instruction-preset
+                             instruction-not
+                             instruction-shift-right
+                             instruction-peek-byte
+                             instruction-peek-address
+                             instruction-poke-byte
+                             instruction-poke-address
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-push-cons
+                             instruction-set-car
+                             instruction-set-cdr
+                             instruction-push-composite
+                             instruction-set-composite-value
+                             instruction-subtract-b-a
+                             instruction-subtract-a-b
+                             instruction-add
+                             instruction-xor
+                             instruction-or
+                             instruction-and
+                             instruction-multiply
+                             instruction-divide
+                             instruction-equal
+                             instruction-less
+                             instruction-greater
+                             instruction-cmp
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid
+                             instruction-invalid)
+ )

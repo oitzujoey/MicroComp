@@ -1,0 +1,17 @@
+(defun in ()
+  ldi io cb
+  ldm a)
+
+(defun out ()
+  ldi io cb
+  stm a)
+
+(defun out-byte byte
+  ldi byte a
+  ldi io cb
+  stm a)
+
+(defun out-program-byte byte-address
+  load-address-cb byte-address
+  ldp a
+  out)

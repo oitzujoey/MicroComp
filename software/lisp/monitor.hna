@@ -1,0 +1,108 @@
+(include "../../assembler/assembler.hna")
+
+;; Set aside the entire top half of data memory for the single I/O port
+select-address-space: data-memory
+address: 0x8000
+declare-label: io  allocate: io 0x8000
+address: 0x0000
+
+(include "../library/library.hna")
+(include "../library/io.hna")
+
+;; Data address space is only for creating labels that are used in the program space. No flash file is generated for
+;; data memory
+select-address-space: data-memory
+declare-label: out-string-address  allocate-address: out-string-address undefined
+declare-label: out-string-end-address  allocate-address: out-string-end-address undefined
+
+declare-label: bytecode-address  allocate-address: bytecode-address undefined
+
+select-address-space: program-memory
+
+
+declare-label: start
+declare-label: out-string
+declare-label: ready-string
+declare-label: ready-string-end
+declare-label: llama-string
+declare-label: llama-string-end
+declare-label: execute-bytecode
+declare-label: bytecode
+
+
+label: start
+stmi ready-string out-string-address
+stmi ready-string-end out-string-end-address
+leaf-call out-string
+
+stmi bytecode bytecode-address
+leaf-call execute-bytecode
+
+out-byte car "@"
+
+define-label: loop
+ldi loop cb
+jmp
+
+
+label: out-string
+out-program-byte out-string-address
+increment-address out-string-address
+if-address-!= out-string-address out-string-end-address out-string
+return-from-leaf
+
+
+allocate-string: ready-string "Ready.\n"
+label: ready-string-end
+
+
+label: execute-bytecode
+(include "lisp.hna")
+
+
+label: bytecode
+var integer.0 0x10
+var integer.1 0x11
+var integer.8 0x12
+var jump.8 0x07
+var push-from-index.8 0x2A
+var call-program 0x04
+var pop.1 0x05
+var add.8 0x06
+var copy-to-index.8 0x07
+var pop.8 0x08
+var less.8 0x0a
+var brnz.8 0x0b
+var halt 0x0c
+(push-instruction-bytes
+ integer.0
+ integer.1
+ integer.0
+ integer.0
+ jump.8 32
+ push-from-index.8 0x04
+ call-program 0xff 0xff ;#print
+ pop.1
+ add.8 0x04 0x03
+ copy-to-index.8 0x03
+ pop.1
+ push-from-index.8 0x04
+ copy-to-index.8 0x04
+ pop.1
+ push-from-index.8 0x02
+ copy-to-index.8 0x05
+ pop.1
+ integer.1
+ add.8 0x02 0x01
+ copy-to-index.8 0x03
+ copy-to-index.8 0x02
+ pop.8 0x02
+ integer.8 0x0A
+ less.8 0x02 0x01
+ brnz.8 0xD9 0x02
+ copy-to-index.8 0x01 0x04
+ pop.8 0x03
+ halt)
+
+
+assemble: "lisp"

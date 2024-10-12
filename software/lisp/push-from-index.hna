@@ -1,0 +1,6 @@
+(()
+ label: instruction-push-from-index
+ out-byte car "P"
+ out-byte car "F"
+ out-byte car "I"
+ jmpi dispatch)
