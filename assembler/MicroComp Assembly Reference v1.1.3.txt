@@ -1,0 +1,105 @@
+8-bit data bus
+16-bit address buses
+Modified Harvard Architecture
+ROM only exists in program address space
+4 registers
+    a   arithmetic/flag swap register
+    b   arithmetic/index register
+    c   index register
+    f   flag register
+
+Instruction Assembly    Clock cycles    Description
+ldi byte register       4               byte -> register
+ldi address cb          4               low address -> b, high address -> c
+mov source destination  4               register-s -> register-d
+ldm register            4               data[c b] -> register
+ldp register            4               prog[c b] -> register
+stm f/a                 4               f/a -> data[c b]
+stp f/a                 4               f/a -> prog[c b]
+br.c                    4               f[carry] ? c b : pc -> pc
+br.n                    4               f[negative] ? c b : pc -> pc
+br.v                    4               f[overflow] ? c b : pc -> pc
+br.nz                   4               f[not zero] ? c b : pc -> pc
+br.hc                   4               f[half carry] ? c b : pc -> pc
+br.ep                   4               f[even parity] ? c b : pc -> pc
+br.sc                   4               f[right-shift carry] ? c b : pc -> pc
+br.t/jmp                4               true ? c b : pc -> pc
+br.nc                   4               !f[carry] ? c b : pc -> pc
+br.p/br.nn              4               !f[negative] ? c b : pc -> pc
+br.nv                   4               !f[overflow] ? c b : pc -> pc
+br.z                    4               !f[not zero] ? c b : pc -> pc
+br.nhc                  4               !f[half carry] ? c b : pc -> pc
+br.op/br.nep            4               !f[even parity] ? c b : pc -> pc
+br.nsc                  4               !f[right-shift carry] ? c b : pc -> pc
+br.f/noop               4               false ? c b : pc -> pc
+clr f                   4               0x00 -> f
+sub b a f               4               b - a -> f
+sub a b f               4               a - b -> f
+add f                   4               a + b -> f
+xor f                   4               a ^ b -> f
+or f                    4               a | b -> f
+and f                   4               a & b -> f
+pre f                   4               0xff -> f  ; So named because of lack of namespacing in the assembler.
+clr a                   4               0x00 -> a
+sub b a a               4               b - a -> a
+sub a b a               4               a - b -> a
+add a                   4               a + b -> a
+xor a                   4               a ^ b -> a
+or a                    4               a | b -> a
+and a                   4               a & b -> a
+pre a                   4               0xff -> a
+clr b                   4               0x00 -> b
+sub b a b               4               b - a -> b
+sub a b b               4               a - b -> b
+add b                   4               a + b -> b
+xor b                   4               a ^ b -> b
+or b                    4               a | b -> b
+and b                   4               a & b -> b
+pre b                   4               0xff -> b
+clr c                   4               0x00 -> c
+sub b a c               4               b - a -> c
+sub a b c               4               a - b -> c
+add c                   4               a + b -> c
+xor c                   4               a ^ b -> c
+or c                    4               a | b -> c
+and c                   4               a & b -> c
+pre c                   4               0xff -> c
+shr a                   4               a >> 1 -> a
+swp a b                 8               A -> B, B -> A
+nop                     2               No operation
+
+Flag Register Contents:
+
+bit     symbol  use
+---------------------------
+0       C       Carry - Is set when a carry occurs or a borrow does not occur.
+1       N       Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
+2       V       Overflow - Is set when the sign of the result is not correct.
+3       !Z      Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
+4       H       Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
+5       E       Even Parity - Is set when the parity is even.
+6       S       Right-Shift Carry - Is the lower bit of A before the carry occurred.
+7       T       True - Always high. Is used for jumps and two cycle NOPs. While this flag can be modified with MOV instructions, a BR.cc instruction always reads T as true.
+
+Instructions that affect the flags:
+clr
+sub
+add
+xor
+or
+and
+set
+shr
+swp
+
+Pseudo Instructions:
+
+name            use
+select-address-space: program-memory    All code below this line will be put in program memory.
+select-address-space: data-memory       All code below this line will be put in data memory.
+declare-label: <label name>             Declare a label before it is used.
+label: <label name>                     Place a label on the current line.
+set address <address>                   Set the address of the current address space to <address>.
+allocate: <label name> <length>         Place a label on the current line with the specified length in bytes.
+allocate-string: <label name> <string>  Place a label on the current line. Allocate space for the string and fill that part of ROM with the string.
+assemble: <file name>                   This goes at the end of the file. Finish assembly and write to "<file name>.bin".

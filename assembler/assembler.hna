@@ -277,7 +277,7 @@ defun noop () push-instruction-bytes 0x7F
       push-instruction-bytes (+ 0x86 (* 8 (register-id destination-register)))
       log-error "Argument must be a register"))
 
-(defun set-bits register
+(defun pre register
   (if register? register
       push-instruction-bytes (+ 0x87 (* 8 (register-id register)))
       log-error "Argument must be a register"))

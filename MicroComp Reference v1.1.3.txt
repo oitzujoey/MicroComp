@@ -1,0 +1,199 @@
+WARNING: Condition codes are inverted from how they are documented. To fix, connect 'w' of 74151 to the XOR, not 'y'.
+
+General Information:
+800mA @ 5V (4W) in original TTL
+?MHz clock speed in original TTL
+?MHZ bus speed in original TTL
+60 instructions
+2-4 clock cycles per instruction
+8-bit data bus
+16-bit address buses
+64KB program memory
+32KB data memory
+One I/O port
+Modified Harvard Architecture
+4 registers
+    A   arithmetic/flag swap register
+    B   arithmetic/index register
+    C   index register
+    F   flag register
+
+Instruction Format:
+{opcode[4:0], cc[2:0]}
+
+Instruction Set:
+Instruction Assembly        Clock cycles    Description
+#00         LDI byte F      4               byte -> F
+#04         LDI byte A      4               byte -> A
+#08         LDI byte B      4               byte -> B
+#0C         LDI byte C      4               byte -> C
+#10         MOV F A         4               F -> A
+#14         MOV F B         4               F -> B
+#18         MOV F C         4               F -> C
+#1C         MOV A F         4               A -> F
+#20         MOV A B         4               A -> B
+#24         MOV A C         4               A -> C
+#28         MOV B F         4               B -> F
+#2C         MOV B A         4               B -> A
+#30         MOV B C         4               B -> C
+#34         MOV C F         4               C -> F
+#38         MOV C A         4               C -> A
+#3C         MOV C B         4               C -> B
+#40         LDM F           4               data[C B] -> F
+#44         LDM A           4               data[C B] -> A
+#48         LDM B           4               data[C B] -> B
+#4C         LDM C           4               data[C B] -> C
+#50         LDP F           4               prog[C B] -> F
+#54         LDP A           4               prog[C B] -> A
+#58         LDP B           4               prog[C B] -> B
+#5C         LDP C           4               prog[C B] -> C
+#60         STM F           4               F -> data[C B]
+#64         STM A           4               A -> data[C B]
+#68         STP F           4               F -> prog[C B]
+#6C         STP A           4               A -> prog[C B]
+#70         BR.cc           4               F[cc] ? C B : pc -> pc
+    #70         BR.C            4               F[cc] = carry
+    #71         BR.N            4               F[cc] = negative
+    #72         BR.V            4               F[cc] = overflow
+    #73         BR.NZ           4               F[cc] = not zero
+#74         BR.cc           4               F[cc] ? C B : pc -> pc
+    #74         BR.H            4               F[cc] = half carry
+    #75         BR.E            4               F[cc] = even parity
+    #76         BR.S            4               F[cc] = right-shift carry
+    #77         BR.T/JMP        4               F[cc] = true
+#78         BR.ncc          4               !F[cc] ? C B : pc -> pc
+    #78         BR.NC           4               F[cc] = no carry
+    #79         BR.P/BR.NN      4               F[cc] = positive
+    #7A         BR.NV           4               F[cc] = no overflow
+    #7B         BR.Z            4               F[cc] = zero
+#7C         BR.ncc          4               !F[cc] ? C B : pc -> pc
+    #7C         BR.NH           4               F[cc] = no half carry
+    #7D         BR.D/BR.NE      4               F[cc] = odd parity
+    #7E         BR.NS           4               F[cc] = no right-shift carry
+    #7F         BR.F/NOOP       4               F[cc] = false
+#80         ALU ? ? F       4               f(A, B) -> F
+    #80         CLR F           4               #00 -> F
+    #81         SUB B A F       4               B - A -> F
+    #82         SUB A B F       4               A - B -> F
+    #83         ADD F           4               A + B -> F
+#84         ALU ? ? F       4               f(A, B) -> F
+    #84         XOR F           4               A ^ B -> F
+    #85         OR F            4               A | B -> F
+    #86         AND F           4               A & B -> F
+    #87         SET F           4               #FF -> F
+#88         ALU ? ? A       4               f(A, B) -> A
+    #88         CLR A           4               #00 -> A
+    #89         SUB B A A       4               B - A -> A
+    #8A         SUB A B A       4               A - B -> A
+    #8B         ADD A           4               A + B -> A
+#8C         ALU ? ? A       4               f(A, B) -> A
+    #8C         XOR A           4               A ^ B -> A
+    #8D         OR A            4               A | B -> A
+    #8E         AND A           4               A & B -> A
+    #8F         SET A           4               #FF -> A
+#90         ALU ? ? B       4               f(A, B) -> B
+    #90         CLR B           4               #00 -> B
+    #91         SUB B A B       4               B - A -> B
+    #92         SUB A B B       4               A - B -> B
+    #93         ADD B           4               A + B -> B
+#94         ALU ? ? B       4               f(A, B) -> B
+    #94         XOR B           4               A ^ B -> B
+    #95         OR B            4               A | B -> B
+    #96         AND B           4               A & B -> B
+    #97         SET B           4               #FF -> B
+#98         ALU ? ? C       4               f(A, B) -> C
+    #98         CLR C           4               #00 -> C
+    #99         SUB B A C       4               B - A -> C
+    #9A         SUB A B C       4               A - B -> C
+    #9B         ADD C           4               A + B -> C
+#9C         ALU ? ? C       4               f(A, B) -> C
+    #9C         XOR C           4               A ^ B -> C
+    #9D         OR C            4               A | B -> C
+    #9E         AND C           4               A & B -> C
+    #9F         SET C           4               #FF -> C
+#A0         Reserved        2               No operation
+#A4         Reserved        2               No operation
+#A8         Reserved        2               No operation
+#AC         Reserved        2               No operation
+#B0         Reserved        2               No operation
+#B4         Reserved        2               No operation
+#B8         Reserved        2               No operation
+#BC         Reserved        2               No operation
+#C0         Reserved        2               No operation
+#C4         Reserved        2               No operation
+#C8         Reserved        2               No operation
+#CC         Reserved        2               No operation
+#D0         Reserved        2               No operation
+#D4         Reserved        2               No operation
+#D8         Reserved        2               No operation
+#DC         Reserved        2               No operation
+#E0         Reserved        2               No operation
+#E4         Reserved        2               No operation
+#E8         Reserved        2               No operation
+#EC         Reserved        2               No operation
+#F0         LDI address CB  6               low address -> B, high address -> C
+#F4         SHR A           4               A >> 1 -> A
+#F8         SWP A B         8               A -> B, B -> A
+    #EA         SWP A B         8               A -> B, B -> A  ; I don't know why this entry is here. I don't think this instruction can XOR.
+#FC         NOP             2               No operation
+
+Flag Register Contents:
+
+bit     symbol  use
+---------------------------
+0       C       Carry - Is set when a carry occurs or a borrow does not occur.
+1       N       Negative - Is set when the result of an operation is negative. N is an XOR of the sign of the result and the overflow flag (V).
+2       V       Overflow - Is set when the sign of the result is not correct.
+3       !Z      Not Zero - Is set when the result of the operation is not 0xFF. To compare two numbers, clear the carry flag and subtract A from B.
+4       H       Half Carry - Is set when a carry from the lower four bits occurs. This flag is used for BCD arithmetic.
+5       E       Even Parity - Is set when the parity is even.
+6       S       Right-Shift Carry - Is the lower bit of A before the carry occurred.
+7       T       True - Always high. Is used for jumps and two cycle NOPs. While this flag can be modified with MOV instructions, a BR.cc instruction always reads T as true.
+
+Instructions that affect the flags:
+SHR A
+ALU A/B/C
+
+
+Computer Memory Map:
+
+Program memory
+         _______________
+#0000   |_______________|   Reset/ROM
+#0001   |               |   ROM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+#FFFF   |_______________|
+
+Data memory
+         _______________
+#0000   |               |   RAM
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+        |_______________|
+#1000   |               |   I/O port
+        |               |
+        |               |
+        ~~~~~~~~~~~~~~~~~
+        |               |
+        |               |
+#FFFF   |_______________|
+
+
+Pseudo Instructions:
+
+name            use
+.prog           All code below this line will be put in program memory.
+.data           All code below this line will be put in data memory.
+.addr address   Sets the base address of the instructions that follow.
+.macro name     Tells the assembler that the following code is a macro.
+.endmacro       Tells the assembler that the end of the macro code has been reached.
+.const data     Places a list of data in memory. data can be a comma separated list or a string.
+.ram            Allows the use of labels without actually putting this assembly in the assembled machine code.
+.rom            Begins section that will be written into ROM.
