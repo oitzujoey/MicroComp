@@ -103,7 +103,6 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 	if (!n_pcoe) programAddressBus &= s->programCounter;
 	if (!n_bcoe) programAddressBus &= bcAddressBus;
 	if (!n_rdp) programDataBus &= s->program_memory_read(programAddressBus);
-	/* printf("0x%04X: 0x%02X\n", programAddressBus, programDataBus); */
 	if (!n_rdd) dataBus &= s->data_memory_read(bcAddressBus);
 
 
@@ -239,9 +238,13 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 	if (!n_wrd) s->data_memory_write(bcAddressBus, dataBus);
 
 	if (!n_pcck) {
-		s->programCounter++;
-		if (!n_pcld) {
-			s->programCounter = bcAddressBus;
+		if (n_jmp) {  // Connect n_jmp to PCE1.
+			s->programCounter++;
+		}
+		else {
+			if (!n_pcld) {
+				s->programCounter = bcAddressBus;
+			}
 		}
 	}
 	for (int i = 0; i < MICROCODE_WIDTH; i++)
@@ -257,9 +260,13 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 void microcomp_emulator_reset(microcomp_emulator_state_t *s) {
 	s->microprogramCounter = 0;
 	s->programCounter = 0;
+	// Load instruction register with address 0x0000, or at least, that's the theory.
+	microcomp_emulator_clock(s);
+	// Load microcode registers with valid microcode.
 	microcomp_emulator_clock(s);
 	s->microprogramCounter = 0;
 	s->programCounter = 0;
+	// Next clock should load an instruction from 0x0000, I think.
 }
 
 // Step by one instruction.
@@ -285,10 +292,17 @@ uint8_t microcomp_emulator_program_memory_read(uint16_t address) {
 }
 
 void microcomp_emulator_data_memory_write(uint16_t address, uint8_t data) {
-	if (0x8000 & address)
-		printf("OUT: 0x%0X (%d)\n", data, data);
-	else
+	if (0x8000 & address) {
+		if (0x20 <= data && data < 0x7f) {
+			printf("OUT: 0x%02X (%3d) '%c'\n", data, data, data);
+		}
+		else {
+			printf("OUT: 0x%02X (%3d)\n", data, data);
+		}
+	}
+	else {
 		data_memory[address] = data;
+	}
 }
 
 uint8_t microcomp_emulator_data_memory_read(uint16_t address) {
@@ -346,14 +360,17 @@ void microcomp_emulator_readMemFileIntoBuffer8(uint8_t *buffer, size_t buffer_le
 
 int main(int argc, char *argv[]) {
 	(void) argc;
-	(void) argv;
+	if (argc != 2) {
+		puts("Pass program binary as argument.");
+		return 1;
+	}
 	microcomp_emulator_state_t microcomp;
 	microcomp.program_memory_write = microcomp_emulator_program_memory_write;
 	microcomp.program_memory_read = microcomp_emulator_program_memory_read;
 	microcomp.data_memory_write = microcomp_emulator_data_memory_write;
 	microcomp.data_memory_read = microcomp_emulator_data_memory_read;
 	(void) microcomp_emulator_printSimpleState(&microcomp);
-	microcomp_emulator_readBinaryFileIntoBuffer8(program_memory, PROGRAM_MEMORY_SIZE, "../../assembler/fibonacci.bin");
+	microcomp_emulator_readBinaryFileIntoBuffer8(program_memory, PROGRAM_MEMORY_SIZE, argv[1]);
 	microcomp_emulator_readMemFileIntoBuffer8(microcomp.microcode[0],
 	                                          MICROCODE_DEPTH,
 	                                          "../../microcode/v1.1.3/microcode-v1.1.3-1.mem");
@@ -364,7 +381,8 @@ int main(int argc, char *argv[]) {
 	                                          MICROCODE_DEPTH,
 	                                          "../../microcode/v1.1.3/microcode-v1.1.3-3.mem");
 	(void) microcomp_emulator_reset(&microcomp);
-	for (int i = 0; i < 250; i++) {
+	for (int i = 0; i < 2000; i++) {
+		putchar('.');
 		(void) microcomp_emulator_step(&microcomp);
 		/* (void) microcomp_emulator_printSimpleState(&microcomp); */
 	}
