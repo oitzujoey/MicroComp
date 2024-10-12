@@ -1,11 +1,19 @@
 (include "/usr/local/share/duck-lisp/library.hna")
 
+;; Currently can only generate a single continuous array of bytes. If you explicitly create a label at a specific
+;; address, the assembler will surely generate machine code at the wrong address but referencing the correct addresses.
+
 ;; Data memory has no ROM.
 
 (defclass nothing ()
   make-instance nothing-type nil nil)
 var _nothing (nothing)
 var nothing _nothing
+
+(defclass undefined ()
+  make-instance undefined-type nil nil)
+var _undefined (undefined)
+var undefined _undefined
 
 (defmacro def-self-evaluating symbol (L)
           #(` (var (, symbol) (' (, symbol)))))
@@ -17,9 +25,13 @@ var nothing _nothing
 defun _thunk function  thunk function
 (defmacro thunk (&rest body) (&rest 1 I)
           ` _thunk (lambda () ,@ body))
+(defun thunk-force object
+  (if thunk? object
+      (funcall object)
+      object))
 
-(defun log-error message
-  (println "Error: " message))
+(defun log-error (&rest 1 message)
+  (apply #println "Error: " message))
 
 def-self-evaluating data-memory
 def-self-evaluating program-memory
@@ -45,25 +57,56 @@ var address data-address
 
 
 (defclass label ()
-  make-instance label-type nothing nothing)
+  make-instance label-type undefined nothing)
 defun label-source label  composite-value label
 defun set-label-source (label value)  set-composite-value label value
 (defun / (a b)
   (when label? a
-        set a label-source a)
+        set a label-source a
+        (when undefined? a
+              log-error "/: First argument is undefined. Using 0xFFFF in its place."
+              set a 0xffff))
   (when label? b
-        set b label-source b)
+        set b label-source b
+        (when undefined? b
+              log-error "/: First argument is undefined. Using 0xFFFF in its place."
+              set b 0xffff))
   / a b)
 (defun mod (a b)
   (when label? a
-        set a label-source a)
+        set a label-source a
+        (when undefined? a
+              log-error "mod: First argument is undefined. Using 0xFFFF in its place."
+              set a 0xffff))
   (when label? b
-        set b label-source b)
+        set b label-source b
+        (when undefined? b
+              log-error "mod: First argument is undefined. Using 0xFFFF in its place."
+              set b 0xffff))
   mod a b)
+(defun / (a b)
+  (if (or thunk? a
+          thunk? b)
+      thunk (/ (thunk-force a) (thunk-force b))
+      / a b))
+(defun mod (a b)
+  (if (or thunk? a
+          thunk? b)
+      thunk (mod (thunk-force a) (thunk-force b))
+      mod a b))
 
 (defmacro declare-label: name (L)
           #(` (var (, name) (label))))
 (declare declare-label: (L)
+         (declare-identifier (infer-and-get-next-argument) (quote #L)))
+
+defun label: label  set-label-source label address
+
+(defmacro define-label: name (L)
+          #(` (noscope
+               (var (, name) (label))
+               (set-label-source (, name) address))))
+(declare define-label: (L)
          (declare-identifier (infer-and-get-next-argument) (quote #L)))
 
 defun label: label  set-label-source label address
@@ -74,9 +117,18 @@ defun label: label  set-label-source label address
   set address  + address length)
 
 ;; Need to generate a full 64KiB program ROM file for this.
+(defun allocate-byte: (name byte-to-store)
+  (when (and = address-space data-memory
+             not undefined? byte-to-store)
+    log-error "\"allocate-byte:\" only works properly when used on data memory")
+  label: name
+  set address  + address 2)
+
+;; Need to generate a full 64KiB program ROM file for this.
 (defun allocate-address: (name address-to-store)
-  (when = address-space data-memory
-        log-error "\"allocate-address:\" only works properly when used on data memory")
+  (when (and = address-space data-memory
+             not undefined? address-to-store)
+    log-error "\"allocate-address:\" only works properly when used on data memory")
   label: name
   set address  + address 2)
 
@@ -122,21 +174,42 @@ def-self-evaluating cb
                             true
                             log-error "Address value out of range")
         label? value  true
-        thunk? value  true              ; A lie, I suppose.
+        thunk? value  true  ; A lie, I suppose.
         false))
 
 
 (defun high value
-  (if (or integer? value
-          label? value)
-      thunk  / value 0x0100
-      log-error "Argument must be an integer or label"))
+  (cond thunk? value
+        / value 0x0100
+        (or integer? value
+            label? value)
+        thunk / value 0x0100
+        undefined? value
+        (()
+         log-error "Argument is undefined. Using 0xFF in its place."
+         thunk 0xff)
+        (log-error "Argument must be an integer or label. Got type " (type-of value))))
 
 (defun low value
-  (if (or integer? value
-          label? value)
-      thunk  mod value 0x0100
-      log-error "Argument must be an integer or label"))
+  (cond thunk? value
+        mod value 0x0100
+        (or integer? value
+            label? value)
+        thunk  mod value 0x0100
+        undefined? value
+        (()
+         log-error "Argument is undefined. Using 0xFF in its place."
+         thunk 0xff)
+        (log-error "Argument must be an integer or label. Got type " (type-of value))))
+
+(defun 1+ value
+  (cond thunk? value  thunk 1+ (funcall value)
+        label? value  thunk 1+ label-source value
+        1+ value))
+(defun 2+ value
+  1+ 1+ value)
+(defun 3+ value
+  1+ 1+ 1+ value)
 
 
 var instructions nil
@@ -147,13 +220,54 @@ var instructions nil
   set address  + address bytes-length
   nothing)
 
+(defun push-instruction-addresses (&rest 1 addresses)
+  var bytes nil
+  (dolist address addresses
+          push (low address) bytes
+          push (high address) bytes)
+  var bytes-length length bytes
+  push (cons bytes-length (nreverse bytes)) instructions
+  (incq address bytes-length)
+  nothing)
+
+
+(defun allocate: (name length)
+  label: name
+  set address  + address length)
+
+(defun allocate-address: (name address-to-store)
+  (when (and = address-space data-memory
+             not undefined? address-to-store)
+    log-error "\"allocate-address:\" only works properly when used on data memory"
+    label: name
+    (incq address 2))
+  (if undefined? address-to-store
+      (()
+       label: name
+       (incq address 2))
+      (()
+       label: name
+       push-instruction-bytes low address-to-store
+       push-instruction-bytes high address-to-store))
+  nothing)
+
+(defun allocate-string: (name string)
+  (when = address-space data-memory
+        log-error "\"allocate-string:\" only works properly when used on data memory")
+  label: name
+  (dolist byte string
+          push-instruction-bytes byte)
+  nothing)
+
+
 
 ;; Instruction set
 
 (defun ldi (constant destination-register)
-  (if = cb destination-register
+  (if (and symbol? destination-register
+           = cb destination-register)
       (if address? constant
-          (push-instruction-bytes 0xF0 (mod constant 0x100) (/ constant 0x100))
+          (push-instruction-bytes 0xF0 (low constant) (high constant))
           log-error "First argument must be an address")
       (if byte? constant
           (if register? destination-register
@@ -301,16 +415,23 @@ defun nop () push-instruction-bytes 0xFC
   print-hex-digit  / uint8 16
   print-hex-digit  mod uint8 16)
 
+(defun print-hex-uint16 uint16
+  print-hex-uint8  / uint16 256
+  print-hex-uint8  mod uint16 256)
+
 
 (defun assemble: name
   ;; Write instructions list into bytecode
   var bytecode-list nil
   (dolist element  nreverse instructions
           (dolist element  cdr element
-                  (when integer? element
-                        push element bytecode-list)
-                  (when thunk? element
-                        push (funcall element) bytecode-list)))
+                  ;; println "HERE"
+                  (while thunk? element
+                         set element (funcall element))
+                  ;; println "THERE"
+                  (if integer? element
+                      push element bytecode-list
+                      (log-error "Final assembly: Not an integer: " element))))
 
   var bytecode make-string nreverse bytecode-list
   (dolist element bytecode
@@ -318,5 +439,10 @@ defun nop () push-instruction-bytes 0xFC
 
   var binary-file-name (concatenate name ".bin")
   (println " → " binary-file-name)
+  print "Emitted 0x"
+  print-hex-uint16 (length bytecode)
+  (println " (" (length bytecode) ") bytes")
+  (when > (length bytecode) 0x10000
+        println "PROGRAM ROM OVERFLOW")
   var binary-file  open-file binary-file-name "w"
   fwrite binary-file bytecode)
