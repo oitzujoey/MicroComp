@@ -4,3 +4,10 @@ When determining which features to include in a CPU, consider how many extra chi
 Use a PCB.
 Simulate the machine before building it.
 Load the microcode output into a register to prevent spikes and latency issues.
+
+Here are my thoughts on the architecture. If I were to do it again, I would:
+* Add a D register. C would be the low byte and D would be the high byte of the 16-bit address register. This adds an additional chip (+1).
+* Change the C and D registers to up/down counters. This adds two additional chips (-2, +4).
+* I'm not sure I would ever want to read from the C and D registers, so I might remove C's output buffer. This removes a chip (-1).
+* Allow the program counter to be read?
+These changes make it so I don't have to reload B with the low address every time I do an arithmetic operation, and it also gives me what is effectively a stack. I think this would leave me with all microcode bits used. I think these changes would be useful when implementing a stack-based bytecode VM.
