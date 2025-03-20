@@ -1,0 +1,39 @@
+I found something that duck-lisp is really good at. Apparently duck-lisp's killer feature is writing assemblers.
+I've got a non-functional TTL computer that I've been using DL with a lot. A partial VM is running on the flash programmer, a full VM is running on the debugger, and a while ago I started writing the assembler in it. It assembled the file at compile time, which was weird, and the syntax used lots of parentheses, which wasn't pretty. Since it uses lisp syntax it gets some nice features for free, like assembler macros.
+https://raw.githubusercontent.com/oitzujoey/MicroComp/19c20609737c16b520b0da7a1879130db15af9c5/assembler/fibonacci.ucmp
+Recently I wanted to write software for the computer even though it's not working yet, so I went back to the assembler and updated it. Duck-lisp now has Hanabi's parenthesis inference, so the first thing I did was remove all the parentheses, making it look almost like a proper assembly language. Then I removed the comptime weirdness and found that I could just define the CPU's instructions as functions. So an assembly program is now a normal duck-lisp program.
+What duck-lisp contributes:
+* Prefix notation
+* Full access to the assembler's internals as it is running.
+Most assemblers have the first. Any scripting language can do the second, but instead of writing `ldi (high io) c`, you would write `ldi(high(io), c)`, which doesn't look as nice to me. Duck-lisp by sheer luck has both, so I get nice syntax and metaprogramming.
+This is a "macro":
+```lisp
+(defun copy-byte (source-address destination-address)
+  ldi source-address cb
+  ldm a
+  ldi destination-address cb
+  stm a)
+```
+
+And this is something I'm pretty sure you can't do in most assemblers:
+```lisp
+;; Dispatch table must start on the 256 B page boundary.
+(()
+ var start-address address
+ (while (!= 0 (mod address 0x100))
+        ;; Use 0xFF to avoid programming what we don't need to. Probably doesn't matter at all.
+        push-instruction-bytes 0xff)
+ (println "Allocating dispatch table at " address ", wasting " (- address start-address) " B of space."))
+allocate: dispatch-table 0xC0
+;; 256 B aligned dispatch table goes below:
+```
+> Allocating dispatch table at 512, wasting 227 B of space.
+> 50496F00200640400F0030064049DF00400640400F00500640428F00000640400F0010064F04E007704C0F00600640402F00700640444F00000640400F0010064F09D00770440F0008064F04A0077F0020044F003004C2054F000806480F002004408018B080264F0030044908B080364F0020044F0040048808AF04E0073F0030044F0050048808AF04E0073F0000044F001004C207752656164792E0AF0060044F0080064F0070044F0090064F00A008F64F00B00047F640424F0008064F0080044F009004C2054088086F00E0060086086F0100060087F8EF00C006480F008004408018B080864F0090044908B080964F0100044809092F008017BF010004480082092F008017B77F0B800770421F0008064F0000044F001004C2077FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001000002200304040604030703050304070405030207050501060201070307020802090A0A02010BD90207010408030C → lisp.bin
+> Emitted 0x0231 (561) bytes
+All the "FF"s are the alignment.
+
+
+
+https://github.com/oitzujoey/MicroComp/blob/master/assembler/fibonacci.hna
+https://github.com/oitzujoey/MicroComp/blob/master/Assembly%20Programs/fibonacci.ucmp
+
