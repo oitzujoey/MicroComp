@@ -1,0 +1,18 @@
+## Power on
+
+Power on oscilloscope.
+Turn on Microcomp's power supply while it's disconnected from Microcomp.
+Apply power to Microcomp. Amber power LED should turn on.
+Power on STK500.
+Plug STK500's USB/serial port into laptop.
+Plug LPC1769 board into USB port to power it on. I use my laptop as the USB port.
+Check for /dev/ttyUSB* files. Find the one that connects to Microcomp through the STK500. Change duckLisp-dev.c to use that port and recompile.
+Run duckLisp-dev and pass it "hal.dl". Assuming I didn't change anything, this will write the memory and then dump the memory. What was written and what was read needs to match. Save the output to a file for future reference.
+Save a trace of the malfunctioning pins.
+
+## Power off
+
+Unplug all USB devices.
+Power off STK500.
+Detach power from Microcomp.
+Power off Microcomp's power supply.
