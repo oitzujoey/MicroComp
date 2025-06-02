@@ -1,0 +1,62 @@
+	(include "../../assembler/assembler.hna")
+
+select-address-space: data-memory
+declare-label: io
+address: 0x8000
+allocate: io 0x8000
+
+select-address-space: program-memory
+declare-label: s1
+declare-label: s2
+declare-label: fail
+
+	ldi io cb
+	ldi 0 a
+	stm a
+
+	ldi s1 cb
+	br.t  ; jmp
+	ldi fail cb
+	jmp
+label: s1
+	ldi io cb
+	ldi 1 a
+	stm a
+
+	ldi fail cb
+	br.f  ; 4 cycle nop
+	ldi io cb
+	ldi 2 a
+	stm a
+
+	ldi 0xaa a
+	ldi 0xaa b
+	ldi 0 f
+	sub a b a
+	ldi s2 cb
+	br.z
+	ldi fail cb
+	jmp
+label: s2
+	ldi io cb
+	ldi 3 a
+	stm a
+
+	ldi fail cb
+	br.nz
+declare-label: success
+label: success
+	ldi io cb
+	ldi 4 a
+	stm a
+	ldi success cb
+	jmp
+
+label: fail
+	ldi io cb
+	ldi 0x55 a
+	stm a
+	ldi fail cb
+	jmp
+
+assemble: "branch"

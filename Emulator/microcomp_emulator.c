@@ -138,7 +138,7 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 			// Carry: (((0xff - a) & b) + 1) | (((0xff - a) | b) + carryIn)
 			out4 = (((0xf - a4) & b4) + 1) | (((0xf - a4) | b4) + carryIn);
 			out8 = (((0xff - a) & b) + 1) | (((0xff - a) | b) + carryIn);
-			alufBus = b - a;
+			alufBus = 0xff & (b - a - 1 + carryIn);
 			break;
 		case 02:  // subtract
 			// Generate: (a & (0xff - b)) + 1
@@ -146,7 +146,7 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 			// Carry: ((a & (0xff - b)) + 1) | ((a | (0xff - b)) + carryIn)
 			out4 = ((a4 & (0xf - b4)) + 1) | ((a4 | (0xf - b4)) + carryIn);
 			out8 = ((a & (0xff - b)) + 1) | ((a | (0xff - b)) + carryIn);
-			alufBus = a + (0xff & (1 + (0xff - b)));
+			alufBus = 0xff & (a - b - 1 + carryIn);
 			break;
 		case 03:  // add
 			// Generate: (a & b) + 1
@@ -154,7 +154,7 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 			// Carry: ((a & b) + 1) | ((a | b) + carryIn)
 			out4 = ((a4 & b4) + 1) | ((a4 | b4) + carryIn);
 			out8 = ((a & b) + 1) | ((a | b) + carryIn);
-			alufBus = a + b;
+			alufBus = 0xff & (a + b + carryIn);
 			break;
 		case 04:  // xor
 			// Generate: (a & b) + 1
@@ -194,7 +194,7 @@ void microcomp_emulator_clock(microcomp_emulator_state_t *s) {
 		cn4 = microcomp_emulator_bitElement8(out4, 4);
 		cn8 = microcomp_emulator_bitElement8(out8, 8);
 	}
-	bool n_zero = alufBus != 0;
+	bool n_zero = alufBus != 0xff;
 	bool n_flag = !((07 & s->instructionRegister) == 07
 	                ? true
 	                : microcomp_emulator_bitElement8(s->f, 07 & s->instructionRegister));
@@ -317,6 +317,11 @@ void microcomp_emulator_readBinaryFileIntoBuffer8(uint8_t *buffer, size_t buffer
 	size_t count = 0;
 	while (((c = fgetc(file)) != EOF) && (count < buffer_length)) {
 		*(buffer++) = c;
+		count++;
+	}
+	while (count < buffer_length) {
+		// Erased flash is naturally high.
+		*(buffer++) = 0xFF;
 		count++;
 	}
 	fclose(file);

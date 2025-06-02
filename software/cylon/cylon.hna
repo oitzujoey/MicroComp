@@ -1,0 +1,42 @@
+	(include "../../assembler/assembler.hna")
+
+select-address-space: data-memory
+declare-label: io
+address: 0x8000
+allocate: io 0x8000
+
+select-address-space: program-memory
+declare-label:	up
+declare-label:	down
+
+
+	ldi 1 a
+	ldi (high down) c
+label:	up
+	ldi 0x80 b		; Check if the bit is all the way left.
+	ldi 0 f
+	sub a b b
+	ldi (low down) b
+	br.z
+	mov a b			; Shift the bit left.
+	ldi 0 f
+	add a b a
+	ldi (high io) c		; Display bit.
+	stm a
+	ldi up cb		; Loop.
+	jmp
+
+label:	down
+	ldi 0x01 b		; Check if the bit is all the way right.
+	ldi 0 f
+	sub a b b
+	ldi (low up) b
+	br.z
+	shr a			; Shift the bit right.
+	ldi (high io) c		; Display bit.
+	stm a
+	ldi down cb		; Loop.
+	jmp
+
+
+assemble: "cylon"

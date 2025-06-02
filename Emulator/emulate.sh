@@ -7,5 +7,5 @@ pushd "$(dirname "${source}")"
 duck-lisp "$(basename "${source}")"
 popd
 pushd build
-cmake --build . && ./microcomp_emulator "../${binary}"
+cmake --build . && ./microcomp_emulator $(dirname "${source}")/${binary}
 popd

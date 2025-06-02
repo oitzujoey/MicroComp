@@ -81,6 +81,8 @@ jmp
 
 allocate-string: hello-string "Hello, world!\n"
 label: hello-string-end
+declare-label: overrun
+allocate-string: overrun "U*U*U*U*U*U*U*U*U*"
 
 
 assemble: "hello-world"
