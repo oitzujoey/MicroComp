@@ -6,7 +6,7 @@ emulation_directory=$(pwd)
 
 pushd "$(dirname "${source}")"
 duck-lisp "$(basename "${source}")"
-cp ${binary} ${emulation_directory}/build/
+mv ${binary} ${emulation_directory}/build/
 popd
 pushd build
 cmake --build . && ./microcomp_emulator ./${binary}
