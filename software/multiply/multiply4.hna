@@ -13,8 +13,13 @@ allocate:	io 0x8000
 
 select-address-space: program-memory
 
+	nop
+	nop
+	nop
+	nop
+
 	ldi operand1 cb
-	ldi 0xA a
+	ldi 0x7 a
 	stm a
 	ldi operand2 cb
 	ldi 0x5 a
@@ -39,6 +44,7 @@ label:	multiply4-loop
 	br.z
 
 	;; Check if bit 0 is set. If it is, add operand2 into the accumulator.
+	clr b
 	ldi 1 f			; Don't subtract an extra 1 for subtraction.
 	sub a b a
 	ldi multiply4-skip-add cb
