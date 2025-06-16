@@ -10,18 +10,19 @@ Row 1 (Between ground and Vc symbols)
 74381	IC5		Low nybble of ALU
 
 Row 2 (Between Va and Vb symbols)
-74244	IC13	Flag register 3-state
-74574	IC7		Flag register
-74257	IC4		High nybble flag input mux
-74257	IC3		Low nybble flag input mux
-74133	IC19	Ones detector for the "ones" flag
-74244	IC14	ALU 3-state output
+74244   IC13    Flag register 3-state
+74574   IC7     Flag register
+74257   IC4     High nybble flag input mux
+74257   IC3     Low nybble flag input mux
+74133   IC19    Ones detector for the "ones" flag
+74244   IC14    ALU 3-state output
 
 Row 3 (Nearest logo)
-39SF020A		IC22	Microcode chip 2
-W49F002U-12B	IC23	Microcode chip 3
-74373			IC43	Instruction register
-74161			IC16	Microprogram counter
+74S86?                  Undocumented
+39SF020A        IC22    Microcode chip 2
+W49F002U-12B    IC23    Microcode chip 3
+74373           IC43    Instruction register
+74161           IC16    Microprogram counter
 
 Row 4 (spare BB added on to the side)
 556		Undocumented
