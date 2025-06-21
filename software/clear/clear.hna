@@ -1,0 +1,28 @@
+	(include "../../assembler/assembler.hna")
+
+select-address-space:	data-memory
+declare-label:	io
+address:	0x8000
+allocate:	io 0x8000
+
+select-address-space: program-memory
+
+	nop
+	nop
+	nop
+	nop
+
+	ldi 0 a
+
+declare-label:	increment-loop
+label:	increment-loop
+	ldi io cb
+	clr f			; fclk
+	stm f
+	ldi 1 f			; fclk
+	add a b a		; fclk fsors
+	ldi increment-loop cb
+	jmp
+
+
+assemble: "clear"

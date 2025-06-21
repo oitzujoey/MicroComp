@@ -1,0 +1,92 @@
+	(include "../../assembler/assembler.hna")
+
+select-address-space:	data-memory
+declare-label:	operand1
+allocate:	operand1 1
+declare-label:	operand2
+allocate:	operand2 1
+declare-label:	accumulator
+allocate:	accumulator 1
+declare-label:	io
+address:	0x8000
+allocate:	io 0x8000
+
+select-address-space: program-memory
+
+	nop
+	nop
+	nop
+	nop
+
+	ldi operand1 cb
+	ldi 16 a
+	stm a
+	ldi operand2 cb
+	ldi 15 a
+	stm a
+
+declare-label:	multiply8
+declare-label:	multiply8-loop
+declare-label:	multiply8-skip-add
+declare-label:	multiply8-end
+label:	multiply8
+	ldi accumulator cb
+	clr a
+	stm a
+label:	multiply8-loop
+	;; Check if operand1 is 0. If so, we are done.
+	ldi operand1 cb
+	ldm a
+	clr b
+	clr f
+	sub a b b
+	ldi multiply8-end cb
+	br.z
+
+	;; Check if bit 0 is set. If it is, add operand2 into the accumulator.
+	clr b
+	ldi 1 f			; Don't subtract an extra 1 for subtraction.
+	sub a b a
+	ldi multiply8-skip-add cb
+	br.nsc
+	ldi operand2 cb
+	ldm a
+	ldi accumulator cb
+	ldm b
+	clr f
+	add a b a
+	ldi (low accumulator) b
+	stm a
+	ldi io cb
+	stm a
+
+label:	multiply8-skip-add
+	;; operand1 /= 2; operand2 *= 2;
+	ldi operand1 cb
+	ldm a
+	clr f
+	shr a
+	stm a
+	ldi operand2 cb
+	ldm a
+	mov a b
+	clr f
+	add a b a
+	ldi (low operand2) b
+	stm a
+
+	ldi multiply8-loop cb
+	jmp
+
+label:	multiply8-end
+	ldi accumulator cb
+	ldm a
+	ldi io cb
+	stm a
+declare-label:	end
+label:	end
+	ldi end cb
+	jmp
+
+
+assemble: "multiply8"
