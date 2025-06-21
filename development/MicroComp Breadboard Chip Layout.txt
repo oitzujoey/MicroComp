@@ -34,15 +34,15 @@ Row 4 (spare BB added on to the side)
 Pro's Kit BB, top to bottom.
 
 Row 1 (between ground and V2 symbols)
-74244			IC37	Program counter low 3-state
-M28F101-150P1	IC24	Program ROM
-74244			IC32	Program bus-data bus transceiver
-SRAM			IC26	Data RAM
-7402			IC28	I/O decode NOR gates
+74244   IC37    Program counter low 3-state
+39SF020 IC24    Program ROM
+74244   IC32    Program bus-data bus transceiver
+SRAM    IC26    Data RAM
+7402    IC28    I/O decode NOR gates
 
 Row 2 (Under V1)
 74163	IC33	Program counter low
-74244	IC38	Program counter high 3-state	
+74244	IC38	Program counter high 3-state
 74244	IC40	BC high 3-state
 74244	IC39	BC low 3-state
 74244	IC11	A shift 3-state
