@@ -82,13 +82,13 @@ bit     symbol  use
 7       T       True - Always high. Is used for jumps and two cycle NOPs. While this flag can be modified with MOV instructions, a BR.cc instruction always reads T as true.
 
 Instructions that affect the flags:
-clr
+clr     If you need to clear a register without modifying the flags, use `ldi 0 register`. The flags register is an exception to this. `clr f` works as expected and loads 0x00 into the flags register.
 sub
 add
 xor
 or
 and
-set
+set     If you need to preset a register without modifying the flags, use `ldi 0xff register`. The flags register is an exception to this. `set f` works as expected and loads 0xff into the flags register.
 shr
 swp
 
