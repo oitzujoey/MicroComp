@@ -1037,3 +1037,8 @@ Shutdown
 
 Extra pins: reset state, reset PC
 Need two extra pins. Round up to three.
+
+
+Bit 5 of the microcode address is low. I think it might be floating low.
+
+It turns out some wires were connected improperly. I don't think that was the original problem, but putting the wires in the right place finished the fix. I believe the microcode SRAMs are programmed correctly now. The microcode bits should correspond to the correct signals too.

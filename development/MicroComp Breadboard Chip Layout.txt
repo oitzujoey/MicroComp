@@ -10,18 +10,19 @@ Row 1 (Between ground and Vc symbols)
 74381	IC5		Low nybble of ALU
 
 Row 2 (Between Va and Vb symbols)
-74244	IC13	Flag register 3-state
-74574	IC7		Flag register
-74257	IC4		High nybble flag input mux
-74257	IC3		Low nybble flag input mux
-74133	IC19	Ones detector for the "ones" flag
-74244	IC14	ALU 3-state output
+74244   IC13    Flag register 3-state
+74574   IC7     Flag register
+74257   IC4     High nybble flag input mux
+74257   IC3     Low nybble flag input mux
+74133   IC19    Ones detector for the "ones" flag
+74244   IC14    ALU 3-state output
 
 Row 3 (Nearest logo)
-39SF020A		IC22	Microcode chip 2
-W49F002U-12B	IC23	Microcode chip 3
-74373			IC43	Instruction register
-74161			IC16	Microprogram counter
+74S86?                  Undocumented
+39SF020A        IC22    Microcode chip 2
+W49F002U-12B    IC23    Microcode chip 3
+74373           IC43    Instruction register
+74161           IC16    Microprogram counter
 
 Row 4 (spare BB added on to the side)
 556		Undocumented
@@ -33,15 +34,15 @@ Row 4 (spare BB added on to the side)
 Pro's Kit BB, top to bottom.
 
 Row 1 (between ground and V2 symbols)
-74244			IC37	Program counter low 3-state
-M28F101-150P1	IC24	Program ROM
-74244			IC32	Program bus-data bus transceiver
-SRAM			IC26	Data RAM
-7402			IC28	I/O decode NOR gates
+74244   IC37    Program counter low 3-state
+39SF020 IC24    Program ROM
+74244   IC32    Program bus-data bus transceiver
+SRAM    IC26    Data RAM
+7402    IC28    I/O decode NOR gates
 
 Row 2 (Under V1)
 74163	IC33	Program counter low
-74244	IC38	Program counter high 3-state	
+74244	IC38	Program counter high 3-state
 74244	IC40	BC high 3-state
 74244	IC39	BC low 3-state
 74244	IC11	A shift 3-state
